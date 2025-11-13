@@ -78,7 +78,7 @@ class PhotoSubmissionApp {
 
     /**
      * Analyzes the uploaded photo using Google Cloud Vision API
-     * Extracts text and parses developer information
+     * Extracts text and parses developer information using Gemini AI
      */
     async analyzePhoto() {
         if (!this.photoFile) {
@@ -106,8 +106,19 @@ class PhotoSubmissionApp {
             // Extract text from response
             const extractedText = this.extractTextFromVisionResponse(visionResponse);
             
-            // Parse the extracted text for specific information
-            this.extractedData = this.parseExtractedText(extractedText);
+            // Use Gemini AI to analyze and parse the extracted text
+            const geminiData = await this.callGeminiAPI(extractedText);
+            
+            // Combine extracted text with Gemini parsed data
+            this.extractedData = {
+                fullText: extractedText,
+                companyName: geminiData.companyName || '',
+                contactName: geminiData.contactName || '',
+                email: geminiData.email || '',
+                website: geminiData.website || '',
+                phone: geminiData.phone || '',
+                address: geminiData.address || ''
+            };
             
             // Populate the form
             this.populateForm(this.extractedData);
@@ -175,6 +186,100 @@ class PhotoSubmissionApp {
         }
 
         return await response.json();
+    }
+
+    /**
+     * Calls Google Gemini API to analyze extracted text and identify structured information
+     * @param {string} text - Raw text extracted from the image
+     * @returns {Promise<Object>} Parsed data with identified fields
+     * 
+     * @security Note: API key is exposed in client-side code.
+     * For production use, implement a backend proxy to hide the API key.
+     */
+    async callGeminiAPI(text) {
+        const geminiApiKey = CONFIG.GEMINI_API_KEY ? CONFIG.GEMINI_API_KEY.trim() : '';
+        if (!geminiApiKey || geminiApiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+            throw new Error('Gemini API key is not configured. Please update config.js with your API key.');
+        }
+
+        const prompt = `Analyze the following text extracted from a construction site photo and identify the following information:
+- Company Name: The name of the developer/construction company
+- Contact Name: The name of a person to contact (if mentioned)
+- Email Address: Any email address found
+- Website: Any website URL found
+- Phone Number: Any phone number found
+- Address: The site address or location (street address, city, state, zip code if available)
+
+Return the information in JSON format with these exact keys: companyName, contactName, email, website, phone, address.
+If any information is not found or cannot be determined with confidence, use an empty string "" for that field.
+Do not make up or guess information that is not present in the text.
+
+Text to analyze:
+${text}
+
+Return only valid JSON, no other text.`;
+
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
+            generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 500
+            }
+        };
+
+        const response = await fetch(
+            `${CONFIG.GEMINI_API_URL}?key=${geminiApiKey}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Gemini API request failed');
+        }
+
+        const data = await response.json();
+        
+        // Extract the text from Gemini's response
+        if (data.candidates && 
+            data.candidates[0] && 
+            data.candidates[0].content && 
+            data.candidates[0].content.parts && 
+            data.candidates[0].content.parts[0]) {
+            
+            const responseText = data.candidates[0].content.parts[0].text;
+            
+            // Parse the JSON response
+            try {
+                // Remove markdown code blocks if present
+                const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                const parsedData = JSON.parse(cleanedText);
+                
+                return {
+                    companyName: parsedData.companyName || '',
+                    contactName: parsedData.contactName || '',
+                    email: parsedData.email || '',
+                    website: parsedData.website || '',
+                    phone: parsedData.phone || '',
+                    address: parsedData.address || ''
+                };
+            } catch (parseError) {
+                console.error('Error parsing Gemini response:', parseError);
+                console.error('Response text:', responseText);
+                throw new Error('Failed to parse Gemini API response');
+            }
+        }
+        
+        throw new Error('Invalid Gemini API response format');
     }
 
     extractTextFromVisionResponse(response) {
@@ -271,6 +376,8 @@ class PhotoSubmissionApp {
     populateForm(data) {
         document.getElementById('address').value = data.address || '';
         document.getElementById('company-name').value = data.companyName || '';
+        document.getElementById('contact-name').value = data.contactName || '';
+        document.getElementById('email').value = data.email || '';
         document.getElementById('website').value = data.website || '';
         document.getElementById('phone').value = data.phone || '';
         document.getElementById('extracted-text').value = data.fullText || '';
@@ -288,6 +395,8 @@ class PhotoSubmissionApp {
         const formData = {
             address: document.getElementById('address').value.trim(),
             companyName: document.getElementById('company-name').value.trim(),
+            contactName: document.getElementById('contact-name').value.trim(),
+            email: document.getElementById('email').value.trim(),
             website: document.getElementById('website').value.trim(),
             phone: document.getElementById('phone').value.trim(),
             extractedText: document.getElementById('extracted-text').value.trim(),
@@ -375,6 +484,8 @@ class PhotoSubmissionApp {
         const values = [[
             formData.address,
             formData.companyName,
+            formData.contactName,
+            formData.email,
             formData.website,
             formData.phone,
             new Date().toLocaleDateString(),
@@ -400,10 +511,12 @@ class PhotoSubmissionApp {
     }
 
     async updateSiteData(rowNumber, formData) {
-        const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:F${rowNumber}`;
+        const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:H${rowNumber}`;
         const values = [[
             formData.address,
             formData.companyName,
+            formData.contactName,
+            formData.email,
             formData.website,
             formData.phone,
             new Date().toLocaleDateString(),

@@ -12,7 +12,13 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
 
 - 📷 Photo upload with camera support for mobile devices
 - 🔍 Automatic text extraction using Google Cloud Vision API
-- 🏗️ Intelligent parsing of developer information (company name, website, phone number, address)
+- 🤖 Smart AI-powered parsing using Google Gemini to identify:
+  - Company name
+  - Contact name
+  - Email address
+  - Website
+  - Phone number
+  - Site address
 - 📊 Google Sheets integration for data storage
 - ✏️ User confirmation and editing of extracted data
 - 🔄 Automatic matching and updating of existing sites by address
@@ -20,8 +26,8 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
 ## How It Works
 
 1. **Upload Photo**: User takes or uploads a photo showing developer information at a construction site
-2. **Analyze**: Google Vision API extracts text from the photo
-3. **Parse**: Application intelligently identifies company name, website, phone number, and address
+2. **Extract Text**: Google Vision API extracts text from the photo using OCR
+3. **AI Analysis**: Google Gemini analyzes the raw text and intelligently identifies company name, contact name, email, website, phone number, and address
 4. **Match**: System searches Google Sheet for existing site by address
 5. **Confirm/Edit**: User reviews and can edit the extracted information
 6. **Save**: Data is either added as a new site or updates an existing entry
@@ -39,12 +45,20 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
    - Create two API keys (or use one for both services)
    - Restrict the keys to the specific APIs for security
 
-### 2. Google Sheets Setup
+### 2. Google AI Studio Setup
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create a new API key for Gemini
+3. Save this key for the configuration step
+
+### 3. Google Sheets Setup
 
 1. Create a new Google Sheet
 2. Set up the following columns (in order):
    - Address
    - Company Name
+   - Contact Name
+   - Email
    - Website
    - Phone
    - Date Added
@@ -55,18 +69,19 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
 4. Copy the Sheet ID from the URL:
    - Format: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
 
-### 3. Application Configuration
+### 4. Application Configuration
 
 1. Open `config.js` in the project
 2. Replace the placeholder values:
    ```javascript
    VISION_API_KEY: 'your-actual-vision-api-key',
+   GEMINI_API_KEY: 'your-actual-gemini-api-key',
    SHEETS_API_KEY: 'your-actual-sheets-api-key',
    SHEET_ID: 'your-actual-sheet-id',
    SHEET_NAME: 'Sites' // or your sheet tab name
    ```
 
-### 4. Deploy to GitHub Pages
+### 5. Deploy to GitHub Pages
 
 **Quick Start:**
 1. Make the repository public (Settings → Danger Zone → Change visibility)
