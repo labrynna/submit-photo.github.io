@@ -87,7 +87,8 @@ class PhotoSubmissionApp {
         }
 
         // Check if API key is configured
-        if (!CONFIG.VISION_API_KEY || CONFIG.VISION_API_KEY === 'YOUR_GOOGLE_VISION_API_KEY_HERE') {
+        const visionApiKey = CONFIG.VISION_API_KEY ? CONFIG.VISION_API_KEY.trim() : '';
+        if (!visionApiKey || visionApiKey === 'YOUR_GOOGLE_VISION_API_KEY_HERE') {
             this.showError('Google Vision API key is not configured. Please update config.js with your API key.');
             return;
         }
@@ -158,7 +159,7 @@ class PhotoSubmissionApp {
         };
 
         const response = await fetch(
-            `${CONFIG.VISION_API_URL}?key=${CONFIG.VISION_API_KEY}`,
+            `${CONFIG.VISION_API_URL}?key=${CONFIG.VISION_API_KEY.trim()}`,
             {
                 method: 'POST',
                 headers: {
@@ -299,12 +300,14 @@ class PhotoSubmissionApp {
         }
 
         // Check if Sheets API is configured
-        if (!CONFIG.SHEETS_API_KEY || CONFIG.SHEETS_API_KEY === 'YOUR_GOOGLE_SHEETS_API_KEY_HERE') {
+        const sheetsApiKey = CONFIG.SHEETS_API_KEY ? CONFIG.SHEETS_API_KEY.trim() : '';
+        if (!sheetsApiKey || sheetsApiKey === 'YOUR_GOOGLE_SHEETS_API_KEY_HERE') {
             this.showError('Google Sheets API key is not configured. Please update config.js with your API key.');
             return;
         }
 
-        if (!CONFIG.SHEET_ID || CONFIG.SHEET_ID === 'YOUR_GOOGLE_SHEET_ID_HERE') {
+        const sheetId = CONFIG.SHEET_ID ? CONFIG.SHEET_ID.trim() : '';
+        if (!sheetId || sheetId === 'YOUR_GOOGLE_SHEET_ID_HERE') {
             this.showError('Google Sheet ID is not configured. Please update config.js with your Sheet ID.');
             return;
         }
@@ -336,7 +339,7 @@ class PhotoSubmissionApp {
 
     async findSiteByAddress(address) {
         try {
-            const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}?key=${CONFIG.SHEETS_API_KEY}`;
+            const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}?key=${CONFIG.SHEETS_API_KEY.trim()}`;
             const response = await fetch(url);
             
             if (!response.ok) {
@@ -378,7 +381,7 @@ class PhotoSubmissionApp {
             formData.extractedText
         ]];
 
-        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}:append?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY}`;
+        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}:append?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -407,7 +410,7 @@ class PhotoSubmissionApp {
             formData.extractedText
         ]];
 
-        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID}/values/${range}?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY}`;
+        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${range}?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
         
         const response = await fetch(url, {
             method: 'PUT',

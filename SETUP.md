@@ -162,6 +162,7 @@ Since you can't commit API keys to a public repo, you have two options:
 ### "API key not configured" error
 - Make sure you've replaced the placeholder API keys in `config.js`
 - Ensure the file is being loaded (check browser console for errors)
+- Note: The application automatically trims whitespace from API keys, so extra spaces won't cause issues
 
 ### "No text detected" error
 - Ensure the photo has clear, readable text
