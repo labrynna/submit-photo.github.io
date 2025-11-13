@@ -4,10 +4,11 @@
  * This application allows users to:
  * 1. Upload photos from construction sites
  * 2. Extract text using Google Cloud Vision API
- * 3. Parse developer information (company, website, phone, address)
+ * 3. Parse developer information using DeepSeek AI (company, website, phone, address)
  * 4. Save data to Google Sheets with automatic matching/updating
  * 
  * @requires Google Cloud Vision API key
+ * @requires DeepSeek API key
  * @requires Google Sheets API key
  * @requires config.js with valid configuration
  */
@@ -78,7 +79,7 @@ class PhotoSubmissionApp {
 
     /**
      * Analyzes the uploaded photo using Google Cloud Vision API
-     * Extracts text and parses developer information using Gemini AI
+     * Extracts text and parses developer information using DeepSeek AI
      */
     async analyzePhoto() {
         if (!this.photoFile) {
@@ -106,18 +107,18 @@ class PhotoSubmissionApp {
             // Extract text from response
             const extractedText = this.extractTextFromVisionResponse(visionResponse);
             
-            // Use Gemini AI to analyze and parse the extracted text
-            const geminiData = await this.callGeminiAPI(extractedText);
+            // Use DeepSeek AI to analyze and parse the extracted text
+            const deepseekData = await this.callDeepSeekAPI(extractedText);
             
-            // Combine extracted text with Gemini parsed data
+            // Combine extracted text with DeepSeek parsed data
             this.extractedData = {
                 fullText: extractedText,
-                companyName: geminiData.companyName || '',
-                contactName: geminiData.contactName || '',
-                email: geminiData.email || '',
-                website: geminiData.website || '',
-                phone: geminiData.phone || '',
-                address: geminiData.address || ''
+                companyName: deepseekData.companyName || '',
+                contactName: deepseekData.contactName || '',
+                email: deepseekData.email || '',
+                website: deepseekData.website || '',
+                phone: deepseekData.phone || '',
+                address: deepseekData.address || ''
             };
             
             // Populate the form
@@ -189,17 +190,17 @@ class PhotoSubmissionApp {
     }
 
     /**
-     * Calls Google Gemini API to analyze extracted text and identify structured information
+     * Calls DeepSeek API to analyze extracted text and identify structured information
      * @param {string} text - Raw text extracted from the image
      * @returns {Promise<Object>} Parsed data with identified fields
      * 
      * @security Note: API key is exposed in client-side code.
      * For production use, implement a backend proxy to hide the API key.
      */
-    async callGeminiAPI(text) {
-        const geminiApiKey = CONFIG.GEMINI_API_KEY ? CONFIG.GEMINI_API_KEY.trim() : '';
-        if (!geminiApiKey || geminiApiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-            throw new Error('Gemini API key is not configured. Please update config.js with your API key.');
+    async callDeepSeekAPI(text) {
+        const deepseekApiKey = CONFIG.DEEPSEEK_API_KEY ? CONFIG.DEEPSEEK_API_KEY.trim() : '';
+        if (!deepseekApiKey || deepseekApiKey === 'YOUR_DEEPSEEK_API_KEY_HERE') {
+            throw new Error('DeepSeek API key is not configured. Please update config.js with your API key.');
         }
 
         const prompt = `Analyze the following text extracted from a construction site photo and identify the following information:
@@ -220,23 +221,24 @@ ${text}
 Return only valid JSON, no other text.`;
 
         const requestBody = {
-            contents: [{
-                parts: [{
-                    text: prompt
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 500
-            }
+            model: "deepseek-chat",
+            messages: [
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            temperature: 0.1,
+            max_tokens: 500
         };
 
         const response = await fetch(
-            `${CONFIG.GEMINI_API_URL}?key=${geminiApiKey}`,
+            CONFIG.DEEPSEEK_API_URL,
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${deepseekApiKey}`
                 },
                 body: JSON.stringify(requestBody)
             }
@@ -244,19 +246,18 @@ Return only valid JSON, no other text.`;
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Gemini API request failed');
+            throw new Error(errorData.error?.message || 'DeepSeek API request failed');
         }
 
         const data = await response.json();
         
-        // Extract the text from Gemini's response
-        if (data.candidates && 
-            data.candidates[0] && 
-            data.candidates[0].content && 
-            data.candidates[0].content.parts && 
-            data.candidates[0].content.parts[0]) {
+        // Extract the text from DeepSeek's response
+        if (data.choices && 
+            data.choices[0] && 
+            data.choices[0].message && 
+            data.choices[0].message.content) {
             
-            const responseText = data.candidates[0].content.parts[0].text;
+            const responseText = data.choices[0].message.content;
             
             // Parse the JSON response
             try {
@@ -273,13 +274,13 @@ Return only valid JSON, no other text.`;
                     address: parsedData.address || ''
                 };
             } catch (parseError) {
-                console.error('Error parsing Gemini response:', parseError);
+                console.error('Error parsing DeepSeek response:', parseError);
                 console.error('Response text:', responseText);
-                throw new Error('Failed to parse Gemini API response');
+                throw new Error('Failed to parse DeepSeek API response');
             }
         }
         
-        throw new Error('Invalid Gemini API response format');
+        throw new Error('Invalid DeepSeek API response format');
     }
 
     extractTextFromVisionResponse(response) {
