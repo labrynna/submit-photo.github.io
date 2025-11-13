@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Site Photo Submission</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Construction Site Photo Submission</h1>
+            <p>Upload a photo showing developer information from the construction site</p>
+        </header>
+
+        <main>
+            <!-- Step 1: Photo Upload -->
+            <section id="upload-section" class="card">
+                <h2>Step 1: Upload Photo</h2>
+                <div class="upload-area">
+                    <input type="file" id="photo-input" accept="image/*" capture="environment">
+                    <label for="photo-input" class="upload-label">
+                        <span class="upload-icon">📷</span>
+                        <span>Take Photo or Choose File</span>
+                    </label>
+                    <div id="preview-container" style="display: none;">
+                        <img id="photo-preview" alt="Photo preview">
+                        <button id="analyze-btn" class="btn btn-primary">Analyze Photo</button>
+                    </div>
+                </div>
+                <div id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing photo...</p>
+                </div>
+            </section>
+
+            <!-- Step 2: Review and Edit Extracted Data -->
+            <section id="review-section" class="card" style="display: none;">
+                <h2>Step 2: Review & Edit Extracted Information</h2>
+                <form id="data-form">
+                    <div class="form-group">
+                        <label for="address">Site Address *</label>
+                        <input type="text" id="address" name="address" required>
+                        <small>The address will be used to match or create a site entry</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company-name">Developer Company Name *</label>
+                        <input type="text" id="company-name" name="companyName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <input type="url" id="website" name="website" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="extracted-text">Extracted Text (for reference)</label>
+                        <textarea id="extracted-text" name="extractedText" rows="4" readonly></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save to Google Sheet</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Step 3: Success Message -->
+            <section id="success-section" class="card" style="display: none;">
+                <h2>✓ Success!</h2>
+                <p id="success-message">Data has been saved successfully.</p>
+                <button id="new-submission-btn" class="btn btn-primary">Submit Another Photo</button>
+            </section>
+
+            <!-- Error Message -->
+            <div id="error-section" class="card error-card" style="display: none;">
+                <h3>⚠ Error</h3>
+                <p id="error-message"></p>
+                <button id="dismiss-error-btn" class="btn btn-secondary">Dismiss</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Please ensure the photo clearly shows the developer's company name, website, and phone number.</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
