@@ -7,6 +7,10 @@ const CONFIG = {
     // Get your API key from: https://console.cloud.google.com/apis/credentials
     VISION_API_KEY: 'AIzaSyDkfiUXQR35cedbzOrGGaIsVanB5sFLnIM',
     
+    // Google Gemini API Key
+    // Get your API key from: https://aistudio.google.com/app/apikey
+    GEMINI_API_KEY: 'AIzaSyClBmkK1toGM-Ai90oefqiO7AfnIO1wPlk',
+    
     // Google Sheets API Configuration
     // Get your API key from: https://console.cloud.google.com/apis/credentials
     SHEETS_API_KEY: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE',
@@ -20,7 +24,8 @@ const CONFIG = {
     
     // API endpoints
     VISION_API_URL: 'https://vision.googleapis.com/v1/images:annotate',
-    SHEETS_API_URL: 'https://sheets.googleapis.com/v4/spreadsheets'
+    SHEETS_API_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
+    GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 };
 
 // Instructions for setup:
