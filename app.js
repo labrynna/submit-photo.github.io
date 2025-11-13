@@ -1,3 +1,17 @@
+/**
+ * Construction Site Photo Submission Application
+ * 
+ * This application allows users to:
+ * 1. Upload photos from construction sites
+ * 2. Extract text using Google Cloud Vision API
+ * 3. Parse developer information (company, website, phone, address)
+ * 4. Save data to Google Sheets with automatic matching/updating
+ * 
+ * @requires Google Cloud Vision API key
+ * @requires Google Sheets API key
+ * @requires config.js with valid configuration
+ */
+
 // Main application logic
 class PhotoSubmissionApp {
     constructor() {
@@ -41,6 +55,13 @@ class PhotoSubmissionApp {
             return;
         }
 
+        // Check file size (limit to 10MB for Vision API compatibility)
+        const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSizeInBytes) {
+            this.showError('Image file is too large. Please select an image smaller than 10MB.');
+            return;
+        }
+
         this.photoFile = file;
         this.displayPhotoPreview(file);
     }
@@ -55,6 +76,10 @@ class PhotoSubmissionApp {
         reader.readAsDataURL(file);
     }
 
+    /**
+     * Analyzes the uploaded photo using Google Cloud Vision API
+     * Extracts text and parses developer information
+     */
     async analyzePhoto() {
         if (!this.photoFile) {
             this.showError('Please select a photo first.');
@@ -110,6 +135,15 @@ class PhotoSubmissionApp {
         });
     }
 
+    /**
+     * Calls Google Cloud Vision API to perform OCR on the image
+     * @param {string} base64Image - Base64 encoded image data
+     * @returns {Promise<Object>} Vision API response
+     * 
+     * @security Note: API key is exposed in client-side code.
+     * For production use, implement a backend proxy to hide the API key.
+     * Use HTTP referrer restrictions in Google Cloud Console.
+     */
     async callVisionAPI(base64Image) {
         const requestBody = {
             requests: [{
@@ -152,6 +186,24 @@ class PhotoSubmissionApp {
         throw new Error('No text detected in the image');
     }
 
+    /**
+     * Sanitizes text input to prevent XSS attacks
+     * @param {string} text - Text to sanitize
+     * @returns {string} Sanitized text
+     */
+    sanitizeInput(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Parses extracted text to identify structured developer information
+     * Uses regex patterns to detect company names, websites, phones, and addresses
+     * @param {string} text - Raw text extracted from the image
+     * @returns {Object} Parsed data object with identified fields
+     */
     parseExtractedText(text) {
         const data = {
             fullText: text,
