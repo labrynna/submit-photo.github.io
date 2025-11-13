@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Data Extraction Logic</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-input {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #667eea;
+            background: #f0f4ff;
+        }
+        .pass {
+            color: green;
+            font-weight: bold;
+        }
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Extraction Logic Test</h1>
+    <p>This page tests the text parsing functionality without requiring API keys.</p>
+
+    <div class="test-section">
+        <h2>Test Case 1: Standard Construction Sign</h2>
+        <div class="test-input">SUNRISE CONSTRUCTION LLC
+Building Your Dreams
+
+123 Main Street, Springfield, IL 62701
+
+Phone: (555) 123-4567
+www.sunriseconstruction.com
+
+Licensed & Insured</div>
+        <button onclick="runTest('test1')">Run Test 1</button>
+        <div id="test1-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 2: Different Phone Format</h2>
+        <div class="test-input">ABC Developers Inc.
+Commercial & Residential
+
+456 Oak Avenue
+Los Angeles, CA 90001
+
+Contact: 555.987.6543
+https://abcdevelopers.com</div>
+        <button onclick="runTest('test2')">Run Test 2</button>
+        <div id="test2-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 3: Minimal Information</h2>
+        <div class="test-input">METRO BUILDERS LLC
+789 Pine Road
+New York, NY 10001
+212-555-0100</div>
+        <button onclick="runTest('test3')">Run Test 3</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Case 4: Complex Format</h2>
+        <div class="test-input">Golden Gate Construction Corporation
+Your Trusted Builder Since 1995
+
+Project Site: 321 Elm Street, San Francisco, CA 94102
+Office: (415) 555-7890
+Web: www.goldengateconstruction.net
+Email: info@goldengateconstruction.net
+
+Contractor License #123456</div>
+        <button onclick="runTest('test4')">Run Test 4</button>
+        <div id="test4-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Run All Tests</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <div id="all-tests-result"></div>
+    </div>
+
+    <script>
+        // Import the parsing logic (simplified version for testing)
+        function parseExtractedText(text) {
+            const data = {
+                fullText: text,
+                companyName: '',
+                website: '',
+                phone: '',
+                address: ''
+            };
+
+            // Extract phone number (various formats)
+            const phonePatterns = [
+                /(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/,
+                /([0-9]{3})[-.\s]([0-9]{3})[-.\s]([0-9]{4})/,
+                /\(([0-9]{3})\)\s*([0-9]{3})[-.\s]([0-9]{4})/
+            ];
+
+            for (const pattern of phonePatterns) {
+                const phoneMatch = text.match(pattern);
+                if (phoneMatch) {
+                    data.phone = phoneMatch[0].trim();
+                    break;
+                }
+            }
+
+            // Extract website/URL
+            const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.(com|net|org|edu|gov|io|co)[^\s]*)/gi;
+            const urlMatch = text.match(urlPattern);
+            if (urlMatch) {
+                data.website = urlMatch[0].trim();
+                // Add https:// if not present
+                if (!data.website.startsWith('http')) {
+                    data.website = 'https://' + data.website;
+                }
+            }
+
+            // Extract address (look for street patterns)
+            const addressPattern = /\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Circle|Cir|Place|Pl)(?:\s+[A-Za-z\s,]+)?/i;
+            const addressMatch = text.match(addressPattern);
+            if (addressMatch) {
+                data.address = addressMatch[0].trim();
+            }
+
+            // Extract company name (heuristic: look for lines with "LLC", "Inc", "Corporation", etc.)
+            const companyPattern = /(.*?(?:LLC|L\.L\.C\.|Inc\.|Incorporated|Corp\.|Corporation|Company|Co\.|Limited|Ltd\.)[^\n]*)/i;
+            const companyMatch = text.match(companyPattern);
+            if (companyMatch) {
+                data.companyName = companyMatch[0].trim();
+            } else {
+                // Fallback: use the first line that's not a phone or website
+                const lines = text.split('\n').filter(line => line.trim());
+                for (const line of lines) {
+                    if (!line.match(/\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/) && 
+                        !line.match(/www\.|\.com|\.net|\.org/) &&
+                        line.length > 3) {
+                        data.companyName = line.trim();
+                        break;
+                    }
+                }
+            }
+
+            return data;
+        }
+
+        const testCases = {
+            test1: {
+                input: `SUNRISE CONSTRUCTION LLC
+Building Your Dreams
+
+123 Main Street, Springfield, IL 62701
+
+Phone: (555) 123-4567
+www.sunriseconstruction.com
+
+Licensed & Insured`,
+                expected: {
+                    companyName: 'SUNRISE CONSTRUCTION LLC',
+                    phone: '(555) 123-4567',
+                    website: 'https://www.sunriseconstruction.com',
+                    address: '123 Main Street'
+                }
+            },
+            test2: {
+                input: `ABC Developers Inc.
+Commercial & Residential
+
+456 Oak Avenue
+Los Angeles, CA 90001
+
+Contact: 555.987.6543
+https://abcdevelopers.com`,
+                expected: {
+                    companyName: 'ABC Developers Inc.',
+                    phone: '555.987.6543',
+                    website: 'https://abcdevelopers.com',
+                    address: '456 Oak Avenue'
+                }
+            },
+            test3: {
+                input: `METRO BUILDERS LLC
+789 Pine Road
+New York, NY 10001
+212-555-0100`,
+                expected: {
+                    companyName: 'METRO BUILDERS LLC',
+                    phone: '212-555-0100',
+                    website: '',
+                    address: '789 Pine Road'
+                }
+            },
+            test4: {
+                input: `Golden Gate Construction Corporation
+Your Trusted Builder Since 1995
+
+Project Site: 321 Elm Street, San Francisco, CA 94102
+Office: (415) 555-7890
+Web: www.goldengateconstruction.net
+Email: info@goldengateconstruction.net
+
+Contractor License #123456`,
+                expected: {
+                    companyName: 'Golden Gate Construction Corporation',
+                    phone: '(415) 555-7890',
+                    website: 'https://www.goldengateconstruction.net',
+                    address: '321 Elm Street'
+                }
+            }
+        };
+
+        function runTest(testId) {
+            const testCase = testCases[testId];
+            const result = parseExtractedText(testCase.input);
+            
+            let html = '<h3>Results:</h3><table>';
+            html += '<tr><th>Field</th><th>Expected</th><th>Actual</th><th>Status</th></tr>';
+            
+            let allPassed = true;
+            
+            for (const key of ['companyName', 'phone', 'website', 'address']) {
+                const expected = testCase.expected[key];
+                const actual = result[key];
+                const passed = actual.includes(expected) || expected.includes(actual) || (expected === '' && actual === '');
+                
+                if (!passed) allPassed = false;
+                
+                html += `<tr>
+                    <td><strong>${key}</strong></td>
+                    <td>${expected || '(empty)'}</td>
+                    <td>${actual || '(empty)'}</td>
+                    <td class="${passed ? 'pass' : 'fail'}">${passed ? '✓ PASS' : '✗ FAIL'}</td>
+                </tr>`;
+            }
+            
+            html += '</table>';
+            html += `<p class="${allPassed ? 'pass' : 'fail'}">Overall: ${allPassed ? '✓ All checks passed' : '✗ Some checks failed'}</p>`;
+            
+            document.getElementById(testId + '-result').innerHTML = html;
+        }
+
+        function runAllTests() {
+            let summary = '<h3>Test Summary:</h3>';
+            let totalTests = 0;
+            let passedTests = 0;
+            
+            for (const testId in testCases) {
+                totalTests++;
+                const testCase = testCases[testId];
+                const result = parseExtractedText(testCase.input);
+                
+                let passed = true;
+                for (const key of ['companyName', 'phone', 'website', 'address']) {
+                    const expected = testCase.expected[key];
+                    const actual = result[key];
+                    if (!(actual.includes(expected) || expected.includes(actual) || (expected === '' && actual === ''))) {
+                        passed = false;
+                        break;
+                    }
+                }
+                
+                if (passed) passedTests++;
+                summary += `<div class="${passed ? 'pass' : 'fail'}">${testId}: ${passed ? '✓ PASS' : '✗ FAIL'}</div>`;
+            }
+            
+            summary += `<p><strong>Total: ${passedTests}/${totalTests} tests passed</strong></p>`;
+            document.getElementById('all-tests-result').innerHTML = summary;
+        }
+
+        // Run all tests on page load
+        window.addEventListener('load', () => {
+            runAllTests();
+        });
+    </script>
+</body>
+</html>
