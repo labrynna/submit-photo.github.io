@@ -24,5 +24,5 @@ const CONFIG = {
     // API endpoints (usually don't need to change these)
     VISION_API_URL: 'https://vision.googleapis.com/v1/images:annotate',
     SHEETS_API_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
-    GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent'
+    GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 };
