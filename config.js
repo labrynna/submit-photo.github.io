@@ -5,7 +5,7 @@
 const CONFIG = {
     // Google Cloud Vision API Key
     // Get your API key from: https://console.cloud.google.com/apis/credentials
-    VISION_API_KEY: 'YOUR_GOOGLE_VISION_API_KEY_HERE',
+    VISION_API_KEY: 'AIzaSyDkfiUXQR35cedbzOrGGaIsVanB5sFLnIM',
     
     // Google Sheets API Configuration
     // Get your API key from: https://console.cloud.google.com/apis/credentials
