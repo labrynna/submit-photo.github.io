@@ -2,6 +2,12 @@
 
 A web application that allows users to upload photos from construction sites, automatically extracts developer information using OCR, and saves the data to a Google Sheet.
 
+## 🚀 Quick Start
+
+**Ready to deploy?** See the [GitHub Pages Deployment Guide](GITHUB_PAGES_DEPLOYMENT.md) for step-by-step instructions.
+
+Your site will be accessible at: `https://labrynna.github.io/submit-photo.github.io/`
+
 ## Features
 
 - 📷 Photo upload with camera support for mobile devices
@@ -62,10 +68,13 @@ A web application that allows users to upload photos from construction sites, au
 
 ### 4. Deploy to GitHub Pages
 
-1. Push all files to your GitHub repository
-2. Go to repository Settings → Pages
-3. Set Source to "main" branch
-4. Your site will be available at: `https://yourusername.github.io/submit-photo.github.io/`
+**Quick Start:**
+1. Make the repository public (Settings → Danger Zone → Change visibility)
+2. Enable GitHub Pages (Settings → Pages → Select branch → Save)
+3. Wait 1-3 minutes for deployment
+4. Access your site at: `https://labrynna.github.io/submit-photo.github.io/`
+
+**📖 For detailed deployment instructions, see [GITHUB_PAGES_DEPLOYMENT.md](GITHUB_PAGES_DEPLOYMENT.md)**
 
 ## Security Considerations
 
