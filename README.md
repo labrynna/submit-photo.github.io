@@ -2,11 +2,16 @@
 
 A web application that allows users to upload photos from construction sites, automatically extracts developer information using OCR, and saves the data to a Google Sheet.
 
-## 🚀 Quick Start
+## 🚀 Quick Start - Netlify Deployment (Recommended)
 
-**Ready to deploy?** See the [GitHub Pages Deployment Guide](GITHUB_PAGES_DEPLOYMENT.md) for step-by-step instructions.
+**Ready to deploy to Netlify?** See the [Netlify Deployment Guide](NETLIFY_DEPLOYMENT.md) for complete setup instructions.
 
-Your site will be accessible at: `https://labrynna.github.io/submit-photo.github.io/`
+This application is now configured to use Netlify environment variables for secure API key management.
+
+## Alternative Deployment Options
+
+- **GitHub Pages**: See the [GitHub Pages Deployment Guide](GITHUB_PAGES_DEPLOYMENT.md) (requires manual config.js setup)
+- **Local Development**: See the "Local Development" section below
 
 ## Features
 
@@ -71,8 +76,12 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
 
 ### 4. Application Configuration
 
-1. Open `config.js` in the project
-2. Replace the placeholder values:
+**For Netlify (Recommended):**
+Follow the [Netlify Deployment Guide](NETLIFY_DEPLOYMENT.md) to set up environment variables.
+
+**For GitHub Pages or Local Development:**
+1. Copy `config.template.js` to `config.js`
+2. Replace the placeholder values with your actual API keys:
    ```javascript
    VISION_API_KEY: 'your-actual-vision-api-key',
    DEEPSEEK_API_KEY: 'your-actual-deepseek-api-key',
@@ -80,36 +89,67 @@ Your site will be accessible at: `https://labrynna.github.io/submit-photo.github
    SHEET_ID: 'your-actual-sheet-id',
    SHEET_NAME: 'Sites' // or your sheet tab name
    ```
+3. **IMPORTANT**: Do NOT commit `config.js` with real API keys to Git
 
-### 5. Deploy to GitHub Pages
+### 5. Deploy
 
-**Quick Start:**
+**Netlify (Recommended):**
+See [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) for complete instructions.
+
+**GitHub Pages:**
 1. Make the repository public (Settings → Danger Zone → Change visibility)
 2. Enable GitHub Pages (Settings → Pages → Select branch → Save)
 3. Wait 1-3 minutes for deployment
 4. Access your site at: `https://labrynna.github.io/submit-photo.github.io/`
 
-**📖 For detailed deployment instructions, see [GITHUB_PAGES_DEPLOYMENT.md](GITHUB_PAGES_DEPLOYMENT.md)**
+**📖 For detailed GitHub Pages instructions, see [GITHUB_PAGES_DEPLOYMENT.md](GITHUB_PAGES_DEPLOYMENT.md)**
+
+## Local Development
+
+To run the application locally for development:
+
+1. Copy `config.template.js` to `config.js` and fill in your API keys
+2. Start a local web server:
+   ```bash
+   # Using Python 3
+   python3 -m http.server 8000
+   
+   # Or using Node.js (if you have http-server installed)
+   npx http-server
+   ```
+3. Open http://localhost:8000 in your browser
 
 ## Security Considerations
 
-⚠️ **Important**: This implementation uses API keys directly in the frontend code for simplicity. For production use, consider:
+⚠️ **Important**: This implementation uses API keys in the frontend code. For production use:
 
-- Using a backend proxy to hide API keys
-- Implementing OAuth 2.0 for Google Sheets access
-- Using Google Cloud service accounts
-- Setting up CORS and API key restrictions in Google Cloud Console
-- Restricting API keys to specific HTTP referrers (your GitHub Pages URL)
+**Netlify Deployment (Recommended):**
+- ✅ API keys are stored securely in Netlify environment variables
+- ✅ API keys are never committed to Git
+- ✅ Build process generates `config.js` at deploy time
+- 🔒 Still recommended: Restrict API keys in Google Cloud Console to your domain
+
+**General Best Practices:**
+- Restrict API keys to specific APIs in Google Cloud Console
+- Restrict API keys to your domain (HTTP referrers)
+- Regularly rotate API keys
+- Monitor API usage and set up alerts
+- Consider using OAuth 2.0 for Google Sheets (more complex but more secure)
 
 ## File Structure
 
 ```
 submit-photo.github.io/
-├── index.html          # Main HTML structure
-├── styles.css          # Application styling
-├── config.js           # API configuration (DO NOT commit with real keys)
-├── app.js             # Main application logic
-└── README.md          # This file
+├── index.html                  # Main HTML structure
+├── styles.css                  # Application styling
+├── config.js                   # API configuration (auto-generated on Netlify)
+├── config.template.js          # Template for local development
+├── app.js                      # Main application logic
+├── generate-config.js          # Build script for Netlify
+├── netlify.toml                # Netlify configuration
+├── NETLIFY_DEPLOYMENT.md       # Netlify deployment guide
+├── GITHUB_PAGES_DEPLOYMENT.md  # GitHub Pages deployment guide
+└── README.md                   # This file
 ```
 
 ## Browser Compatibility

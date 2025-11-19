@@ -1,0 +1,19 @@
+[build]
+  # Build command that generates config.js from environment variables
+  command = "node generate-config.js"
+  
+  # Publish directory (current directory contains static files)
+  publish = "."
+
+[build.environment]
+  # Node.js version for the build process
+  NODE_VERSION = "18"
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
