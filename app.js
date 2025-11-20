@@ -471,8 +471,8 @@ Return only valid JSON, no other text.`;
             const existingSite = await this.findSiteByAddress(formData.address);
             
             if (existingSite) {
-                // Update existing site, passing the headers
-                await this.updateSiteData(existingSite.row, formData, existingSite.headers);
+                // Update existing site, passing the headers and existing data
+                await this.updateSiteData(existingSite.row, formData, existingSite.headers, existingSite.data);
                 this.showSuccess(`Site updated successfully! (Row ${existingSite.row})`);
             } else {
                 // Add new site
@@ -660,7 +660,7 @@ Return only valid JSON, no other text.`;
         return await response.json();
     }
 
-    async updateSiteData(rowNumber, formData, headers) {
+    async updateSiteData(rowNumber, formData, headers, existingRowData) {
         // Create a mapping of form data to column names
         const dataMapping = {
             'Address': formData.address,
@@ -674,18 +674,27 @@ Return only valid JSON, no other text.`;
         };
         
         // Build the row array based on the actual column order in the sheet
+        // Preserve existing data for columns not in the form data mapping
         const rowValues = [];
         for (let i = 0; i < headers.length; i++) {
             const headerName = headers[i];
             const normalizedHeader = headerName.toLowerCase().trim();
             
-            // Find matching data (case-insensitive)
+            // Check if this column exists in our form data mapping
+            let foundInMapping = false;
             let cellValue = '';
             for (const [key, value] of Object.entries(dataMapping)) {
                 if (key.toLowerCase().trim() === normalizedHeader) {
+                    // This column is in our form data mapping, use the new value
                     cellValue = value || '';
+                    foundInMapping = true;
                     break;
                 }
+            }
+            
+            // If column is not in the form data mapping, keep the existing value
+            if (!foundInMapping) {
+                cellValue = (existingRowData && existingRowData[i]) || '';
             }
             
             rowValues.push(cellValue);
