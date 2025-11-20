@@ -24,9 +24,11 @@ This application is now configured to use Netlify environment variables for secu
   - Website
   - Phone number
   - Site address
+- 💾 Automatic photo upload to Google Drive (Automation/Site Pictures folder)
 - 📊 Google Sheets integration for data storage
 - ✏️ User confirmation and editing of extracted data
 - 🔄 Automatic matching and updating of existing sites by address
+- ⏳ Loading indicator during save operation
 
 ## How It Works
 
@@ -35,7 +37,11 @@ This application is now configured to use Netlify environment variables for secu
 3. **AI Analysis**: DeepSeek analyzes the raw text and intelligently identifies company name, contact name, email, website, phone number, and address
 4. **Match**: System searches Google Sheet for existing site by address
 5. **Confirm/Edit**: User reviews and can edit the extracted information
-6. **Save**: Data is either added as a new site or updates an existing entry
+6. **Save**: When user clicks "Save":
+   - A loading indicator appears on the button
+   - Photo is uploaded to Google Drive under "Automation/Site Pictures" with filename `DATE_ADDRESS`
+   - Data is either added as a new site or updates an existing entry in Google Sheets
+   - Success confirmation is displayed
 
 ## Setup Instructions
 
@@ -45,10 +51,13 @@ This application is now configured to use Netlify environment variables for secu
 2. Enable the following APIs:
    - Google Cloud Vision API
    - Google Sheets API
+   - Google Drive API
 3. Create API credentials:
    - **For Vision API**: Go to "Credentials" → "Create Credentials" → "API Key"
-   - **For Sheets API**: Create a Service Account (see [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md))
+   - **For Sheets and Drive APIs**: Create a Service Account (see [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md))
    - Restrict the keys to the specific APIs for security
+
+**Note:** The same service account is used for both Google Sheets and Google Drive access. See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for Drive-specific configuration.
 
 ### 2. DeepSeek API Setup
 

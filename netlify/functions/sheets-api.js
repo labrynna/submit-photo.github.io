@@ -40,7 +40,10 @@ exports.handler = async (event, context) => {
         client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
       },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      scopes: [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive.file'
+      ],
     });
 
     // Get access token

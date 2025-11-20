@@ -463,29 +463,93 @@ Return only valid JSON, no other text.`;
             return;
         }
 
-        this.showLoading(true);
+        // Show loading on the save button
+        const saveBtn = document.getElementById('save-btn');
+        const originalBtnText = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = 'Saving<span class="spinner-small"></span>';
+        
         this.hideError();
 
         try {
+            // Upload photo to Google Drive first
+            let driveFileId = null;
+            if (this.photoFile && CONFIG.DRIVE_API_ENDPOINT) {
+                try {
+                    driveFileId = await this.uploadPhotoToDrive(formData.address);
+                } catch (driveError) {
+                    console.error('Error uploading to Drive:', driveError);
+                    // Continue even if Drive upload fails - don't block the Sheets save
+                    this.showError('Warning: Failed to upload photo to Google Drive: ' + driveError.message + '. Data will still be saved to Sheets.');
+                }
+            }
+            
             // Check if site already exists by address
             const existingSite = await this.findSiteByAddress(formData.address);
             
             if (existingSite) {
                 // Update existing site, passing the headers and existing data
                 await this.updateSiteData(existingSite.row, formData, existingSite.headers, existingSite.data);
-                this.showSuccess(`Site updated successfully! (Row ${existingSite.row})`);
+                this.showSuccess(`Site updated successfully! (Row ${existingSite.row})${driveFileId ? ' Photo saved to Google Drive.' : ''}`);
             } else {
                 // Add new site
                 await this.addNewSite(formData);
-                this.showSuccess('New site added successfully!');
+                this.showSuccess(`New site added successfully!${driveFileId ? ' Photo saved to Google Drive.' : ''}`);
             }
             
         } catch (error) {
             console.error('Error saving to Google Sheets:', error);
             this.showError('Failed to save data: ' + error.message);
         } finally {
-            this.showLoading(false);
+            // Restore button state
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
         }
+    }
+
+    /**
+     * Uploads the photo to Google Drive under Automation/Site Pictures folder
+     * @param {string} address - Site address to use in filename
+     * @returns {Promise<string>} File ID of uploaded file
+     */
+    async uploadPhotoToDrive(address) {
+        if (!this.photoFile) {
+            throw new Error('No photo file available to upload');
+        }
+
+        if (!CONFIG.DRIVE_API_ENDPOINT) {
+            throw new Error('Google Drive API endpoint is not configured');
+        }
+
+        // Create filename: DATE_ADDRESS
+        const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const sanitizedAddress = address.replace(/[^a-zA-Z0-9]/g, '_'); // Replace non-alphanumeric with underscore
+        const fileExtension = this.photoFile.name.split('.').pop() || 'jpg';
+        const fileName = `${date}_${sanitizedAddress}.${fileExtension}`;
+
+        // Convert file to base64
+        const base64Data = await this.fileToBase64(this.photoFile);
+
+        // Upload to Drive
+        const response = await fetch(CONFIG.DRIVE_API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fileName: fileName,
+                fileData: base64Data,
+                mimeType: this.photoFile.type
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to upload photo to Google Drive');
+        }
+
+        const result = await response.json();
+        return result.fileId;
     }
 
     /**

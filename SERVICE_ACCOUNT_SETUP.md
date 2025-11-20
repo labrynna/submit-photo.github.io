@@ -40,11 +40,16 @@ Google Sheets API v4 **does not support API keys** for write operations (append,
 
 ⚠️ **Security Warning**: This JSON file contains credentials that allow access to your Google Cloud resources. Never commit it to version control or share it publicly.
 
-## Step 3: Enable Google Sheets API
+## Step 3: Enable Google Sheets API and Google Drive API
 
 1. In Google Cloud Console, go to **APIs & Services** → **Library**
 2. Search for **"Google Sheets API"**
 3. Click on it and click **"Enable"**
+4. Go back to the Library
+5. Search for **"Google Drive API"**
+6. Click on it and click **"Enable"**
+
+The same service account will be used to access both Google Sheets and Google Drive.
 
 ## Step 4: Share Your Google Sheet with the Service Account
 
@@ -198,6 +203,7 @@ Use this checklist to ensure you've completed all steps:
 ☐ Created a Service Account in Google Cloud Console
 ☐ Downloaded the JSON key file
 ☐ Enabled Google Sheets API
+☐ Enabled Google Drive API
 ☐ Shared Google Sheet with service account email (Editor permission)
 ☐ Extracted client_email and private_key from JSON file
 ☐ Added GOOGLE_SERVICE_ACCOUNT_EMAIL to Netlify environment variables
