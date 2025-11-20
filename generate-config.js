@@ -2,25 +2,26 @@
 
 /**
  * Build script to generate config.js from environment variables
- * This script is run during Netlify build process to inject environment variables
+ * This script is run during Netlify build process to inject non-secret configuration
+ * 
+ * NOTE: This script no longer writes API keys to config.js for security reasons.
+ * API keys are kept secure in Netlify environment variables and accessed via
+ * serverless functions (Netlify Functions) at runtime.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-// Read environment variables
-const VISION_API_KEY = process.env.VISION_API_KEY || '';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
-const SHEETS_API_KEY = process.env.SHEETS_API_KEY || '';
-const SHEET_ID = process.env.SHEET_ID || '';
+// Read non-secret environment variables
 const SHEET_NAME = process.env.SHEET_NAME || 'Sites';
 
-// Validate that required environment variables are set
+// Validate that required environment variables are set (for build-time validation)
+// These are not written to config.js but we validate they exist
 const missingVars = [];
-if (!VISION_API_KEY) missingVars.push('VISION_API_KEY');
-if (!DEEPSEEK_API_KEY) missingVars.push('DEEPSEEK_API_KEY');
-if (!SHEETS_API_KEY) missingVars.push('SHEETS_API_KEY');
-if (!SHEET_ID) missingVars.push('SHEET_ID');
+if (!process.env.VISION_API_KEY) missingVars.push('VISION_API_KEY');
+if (!process.env.DEEPSEEK_API_KEY) missingVars.push('DEEPSEEK_API_KEY');
+if (!process.env.SHEETS_API_KEY) missingVars.push('SHEETS_API_KEY');
+if (!process.env.SHEET_ID) missingVars.push('SHEET_ID');
 
 if (missingVars.length > 0) {
     console.error('ERROR: Missing required environment variables:');
@@ -30,31 +31,23 @@ if (missingVars.length > 0) {
     process.exit(1);
 }
 
-// Generate config.js content
-const configContent = `// Configuration file for API keys and settings
+// Generate config.js content with ONLY non-secret values
+const configContent = `// Configuration file for non-secret settings
 // THIS FILE IS AUTO-GENERATED - DO NOT EDIT MANUALLY
 // Generated at build time from environment variables
+//
+// SECURITY NOTE: This file contains NO API keys or secrets.
+// All API calls are proxied through secure Netlify Functions that
+// access secrets from server-side environment variables.
 
 const CONFIG = {
-    // Google Cloud Vision API Key
-    VISION_API_KEY: ${JSON.stringify(VISION_API_KEY)},
-    
-    // DeepSeek API Key
-    DEEPSEEK_API_KEY: ${JSON.stringify(DEEPSEEK_API_KEY)},
-    
-    // Google Sheets API Configuration
-    SHEETS_API_KEY: ${JSON.stringify(SHEETS_API_KEY)},
-    
-    // Google Sheet ID (from the sheet URL)
-    SHEET_ID: ${JSON.stringify(SHEET_ID)},
-    
     // Sheet name/tab within the spreadsheet
     SHEET_NAME: ${JSON.stringify(SHEET_NAME)},
     
-    // API endpoints
-    VISION_API_URL: 'https://vision.googleapis.com/v1/images:annotate',
-    SHEETS_API_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
-    DEEPSEEK_API_URL: 'https://api.deepseek.com/v1/chat/completions'
+    // Netlify Functions endpoints (serverless functions that proxy API calls)
+    VISION_API_ENDPOINT: '/.netlify/functions/vision-api',
+    DEEPSEEK_API_ENDPOINT: '/.netlify/functions/deepseek-api',
+    SHEETS_API_ENDPOINT: '/.netlify/functions/sheets-api'
 };
 `;
 
@@ -62,9 +55,10 @@ const CONFIG = {
 const configPath = path.join(__dirname, 'config.js');
 fs.writeFileSync(configPath, configContent, 'utf8');
 
-console.log('✓ config.js generated successfully from environment variables');
-console.log(`  - VISION_API_KEY: ${VISION_API_KEY.substring(0, 10)}...`);
-console.log(`  - DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY.substring(0, 10)}...`);
-console.log(`  - SHEETS_API_KEY: ${SHEETS_API_KEY.substring(0, 10)}...`);
-console.log(`  - SHEET_ID: ${SHEET_ID.substring(0, 10)}...`);
+console.log('✓ config.js generated successfully (non-secret configuration only)');
 console.log(`  - SHEET_NAME: ${SHEET_NAME}`);
+console.log('  - API keys are kept secure in Netlify Functions');
+console.log('  - Vision API endpoint: /.netlify/functions/vision-api');
+console.log('  - DeepSeek API endpoint: /.netlify/functions/deepseek-api');
+console.log('  - Sheets API endpoint: /.netlify/functions/sheets-api');
+

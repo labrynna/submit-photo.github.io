@@ -20,7 +20,7 @@ npm-debug.log*
 /tmp/
 *.tmp
 
-# Local configuration with API keys (for development)
-# Note: config.js is tracked but should not contain real keys
-# Use config.template.js as a reference for local development
+# Configuration with API keys (for development)
+# config.js is auto-generated during build and should not be committed
+config.js
 config.local.js

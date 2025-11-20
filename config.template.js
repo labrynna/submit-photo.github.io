@@ -1,28 +1,23 @@
-// Configuration file template for API keys and settings
-// Copy this file to config.js and fill in your actual values
+// Configuration file template for non-secret settings
+// Copy this file to config.js for local development
+//
+// SECURITY NOTE: This file contains NO API keys or secrets.
+// For local development, you need to set up a local proxy or use
+// a development server that mimics Netlify Functions.
+//
+// For production deployment on Netlify:
+// - Set environment variables in Netlify dashboard (Site settings → Build & deploy → Environment)
+// - Required variables: VISION_API_KEY, DEEPSEEK_API_KEY, SHEETS_API_KEY, SHEET_ID, SHEET_NAME
+// - The build script will generate config.js with only non-secret values
+// - API calls are proxied through secure Netlify Functions
 
 const CONFIG = {
-    // Google Cloud Vision API Key
-    // Get your API key from: https://console.cloud.google.com/apis/credentials
-    VISION_API_KEY: 'YOUR_GOOGLE_VISION_API_KEY_HERE',
-    
-    // DeepSeek API Key
-    // Get your API key from: https://platform.deepseek.com/
-    DEEPSEEK_API_KEY: 'YOUR_DEEPSEEK_API_KEY_HERE',
-    
-    // Google Sheets API Configuration
-    // Get your API key from: https://console.cloud.google.com/apis/credentials
-    SHEETS_API_KEY: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE',
-    
-    // Google Sheet ID (from the sheet URL)
-    // Example: https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit
-    SHEET_ID: 'YOUR_GOOGLE_SHEET_ID_HERE',
-    
     // Sheet name/tab within the spreadsheet
     SHEET_NAME: 'Sites',
     
-    // API endpoints (usually don't need to change these)
-    VISION_API_URL: 'https://vision.googleapis.com/v1/images:annotate',
-    SHEETS_API_URL: 'https://sheets.googleapis.com/v4/spreadsheets',
-    DEEPSEEK_API_URL: 'https://api.deepseek.com/v1/chat/completions'
+    // Netlify Functions endpoints (serverless functions that proxy API calls)
+    // For local development, these would need to point to your local dev server
+    VISION_API_ENDPOINT: '/.netlify/functions/vision-api',
+    DEEPSEEK_API_ENDPOINT: '/.netlify/functions/deepseek-api',
+    SHEETS_API_ENDPOINT: '/.netlify/functions/sheets-api'
 };
