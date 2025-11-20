@@ -680,20 +680,20 @@ Return only valid JSON, no other text.`;
             const headerName = headers[i];
             const normalizedHeader = headerName.toLowerCase().trim();
             
-            // Check if we have new data for this column
-            let cellValue = null;
+            // Check if this column exists in our form data mapping
+            let foundInMapping = false;
+            let cellValue = '';
             for (const [key, value] of Object.entries(dataMapping)) {
                 if (key.toLowerCase().trim() === normalizedHeader) {
-                    // Only update if the new value is not empty
-                    if (value && value !== '') {
-                        cellValue = value;
-                    }
+                    // This column is in our form data mapping, use the new value
+                    cellValue = value || '';
+                    foundInMapping = true;
                     break;
                 }
             }
             
-            // If no new data, keep the existing value
-            if (cellValue === null) {
+            // If column is not in the form data mapping, keep the existing value
+            if (!foundInMapping) {
                 cellValue = (existingRowData && existingRowData[i]) || '';
             }
             
