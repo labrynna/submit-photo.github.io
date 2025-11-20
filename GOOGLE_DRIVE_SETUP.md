@@ -26,30 +26,55 @@ The application has been updated to use the existing `GOOGLE_SERVICE_ACCOUNT_EMA
 4. Search for **"Google Drive API"**
 5. Click on it and click **"Enable"**
 
-#### 2. Grant Drive Access to Service Account (if using a shared Drive)
+#### 2. Set Up a Folder in Your Google Drive
 
-If you want to save photos to a specific Google Drive folder that you own:
+**Important:** Service accounts don't have storage quota, so you need to upload to a folder in your regular Google Drive that you've shared with the service account.
 
-**Option A: No additional setup needed**
-- The service account will automatically create the "Automation/Site Pictures" folder in its own Drive
-- You can access this by sharing the service account's Drive with your Google account
-- OR you can grant the service account access to a specific folder in your Drive
+**Step-by-step:**
 
-**Option B: Use a folder in your Google Drive**
-1. Create the folder structure in your Google Drive: `Automation` → `Site Pictures`
-2. Right-click on the "Automation" folder
-3. Click "Share"
-4. Add the service account email (e.g., `your-service-account@your-project.iam.gserviceaccount.com`)
-5. Grant "Editor" permission
-6. Click "Send"
+1. **Create a folder in your Google Drive**
+   - Open your Google Drive (the regular user account, not the service account)
+   - Create a folder (e.g., name it "Photo Uploads" or any name you prefer)
+   - You can create this folder anywhere in your Drive
 
-## No Additional Environment Variables Needed
+2. **Share the folder with your service account**
+   - Right-click on the folder you just created
+   - Click "Share"
+   - Add the service account email (e.g., `your-service-account@your-project.iam.gserviceaccount.com`)
+   - Grant "Editor" permission
+   - Click "Send"
 
-The application automatically uses your existing Netlify environment variables:
+3. **Get the folder ID**
+   - Open the folder in your browser
+   - Look at the URL, it should look like: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+   - Copy the `FOLDER_ID_HERE` part (the long string of letters and numbers)
+   - Example: If the URL is `https://drive.google.com/drive/folders/1A2B3C4D5E6F7G8H9I0J`, then the folder ID is `1A2B3C4D5E6F7G8H9I0J`
+
+4. **Add the folder ID to Netlify environment variables**
+   - Go to your Netlify dashboard
+   - Navigate to Site Settings → Build & deploy → Environment
+   - Add a new environment variable:
+     - **Name:** `GOOGLE_DRIVE_FOLDER_ID`
+     - **Value:** The folder ID you copied (e.g., `1A2B3C4D5E6F7G8H9I0J`)
+   - Save the changes
+
+5. **Deploy your site**
+   - After adding the environment variable, trigger a new deployment
+   - The application will now upload photos to your specified folder
+   - It will automatically create the "Automation/Site Pictures" folder structure inside your specified folder
+
+## No Additional Environment Variables Needed (Optional)
+
+The application can work with just your existing Netlify environment variables:
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` - Already configured for Sheets
 - `GOOGLE_PRIVATE_KEY` - Already configured for Sheets
 
-These same credentials now provide access to both Google Sheets and Google Drive.
+However, **to upload to your regular Google Drive** (recommended because service accounts don't have storage quota), you should also add:
+- `GOOGLE_DRIVE_FOLDER_ID` - The ID of a folder in your Google Drive that you've shared with the service account
+
+**Why GOOGLE_DRIVE_FOLDER_ID?** Service accounts don't have storage quota. By specifying a folder ID from your regular Google Drive that you've shared with the service account, photos will be uploaded to your Drive instead of the service account's Drive (which has no storage).
+
+These same credentials provide access to both Google Sheets and Google Drive.
 
 ## How It Works
 
@@ -68,7 +93,7 @@ All non-alphanumeric characters in the address are replaced with underscores for
 
 Photos are automatically organized in Google Drive:
 ```
-Google Drive (Service Account)
+Your Google Drive (specified folder)
 └── Automation
     └── Site Pictures
         ├── 2025-11-20_123_Main_Street.jpg
@@ -76,7 +101,7 @@ Google Drive (Service Account)
         └── 2025-11-21_789_Pine_Road.jpg
 ```
 
-The folders are created automatically if they don't exist.
+The "Automation/Site Pictures" folder structure is created automatically inside the folder you specified with `GOOGLE_DRIVE_FOLDER_ID`. If you don't specify a folder ID, the application will attempt to create the folders at the root of the service account's Drive (which will fail due to storage quota limitations).
 
 ### Loading Indicator
 
@@ -107,20 +132,28 @@ After deploying the updated application:
 
 **Possible causes and solutions:**
 
-1. **Google Drive API not enabled**
+1. **Service account has no storage quota (most common)**
+   - Service accounts don't have storage quota
+   - You must specify a folder in your regular Google Drive
+   - Add `GOOGLE_DRIVE_FOLDER_ID` environment variable in Netlify with the folder ID from your Drive
+   - Share that folder with the service account email with Editor permission
+   - See "Set Up a Folder in Your Google Drive" section above
+
+2. **Google Drive API not enabled**
    - Go to Google Cloud Console → APIs & Services → Library
    - Search for "Google Drive API" and enable it
 
-2. **Service account credentials incorrect**
+3. **Service account credentials incorrect**
    - Verify `GOOGLE_SERVICE_ACCOUNT_EMAIL` is set correctly in Netlify
    - Verify `GOOGLE_PRIVATE_KEY` is set correctly (including BEGIN/END lines)
    - Check for any extra spaces or formatting issues
 
-3. **Permission denied**
-   - If using a folder in your personal Drive, ensure the service account has Editor access
-   - The service account email should be shared on the folder
+4. **Permission denied**
+   - Ensure the folder specified in `GOOGLE_DRIVE_FOLDER_ID` is shared with your service account
+   - The service account email must have Editor access to the folder
+   - Verify you're using the correct folder ID
 
-4. **Quota exceeded**
+5. **Quota exceeded**
    - Check your Google Cloud project quotas
    - Google Drive API has daily limits that may need to be increased
 
@@ -135,37 +168,40 @@ This ensures that even if Drive has issues, the form data is not lost.
 
 ### Photo not appearing in Drive
 
-1. **Check the service account's Drive**
-   - The folder is created in the service account's Drive, not yours
-   - Share the service account's Drive with your Google account to access it
-   - OR configure a shared folder as described in "Grant Drive Access to Service Account"
+1. **Check if GOOGLE_DRIVE_FOLDER_ID is set**
+   - Verify the `GOOGLE_DRIVE_FOLDER_ID` environment variable is set in Netlify
+   - If not set, the upload will fail because service accounts have no storage quota
+   - Add the environment variable and redeploy
 
-2. **Verify folder permissions**
-   - Ensure the service account has write access to the folder
+2. **Check the correct folder in your Drive**
+   - Photos will appear inside the folder you specified with `GOOGLE_DRIVE_FOLDER_ID`
+   - Look for the "Automation/Site Pictures" folder structure inside that folder
+   - The folder structure is created automatically on the first upload
+
+3. **Verify folder permissions**
+   - Ensure the service account has Editor access to the folder
    - Check that the folder exists and is not deleted
+   - Make sure you're using the correct folder ID from the URL
 
-3. **Check Netlify function logs**
+4. **Check Netlify function logs**
    - Go to Netlify dashboard → Functions
    - Click on "drive-api" function
    - Review the logs for detailed error messages
 
 ## Accessing Uploaded Photos
 
-### Method 1: Through Service Account Drive
+### Simple Method: Check Your Drive
 
-1. In Google Drive, click "Shared with me"
-2. Look for items shared by the service account email
-3. Or navigate to the "Automation/Site Pictures" folder if you set up folder sharing
+1. Open your Google Drive in a web browser
+2. Navigate to the folder you specified in `GOOGLE_DRIVE_FOLDER_ID`
+3. You'll see the "Automation/Site Pictures" folder structure created inside
+4. All uploaded photos will be there with the filename format: `DATE_ADDRESS`
 
-### Method 2: Share Service Account Drive with Yourself
+### Tips for Organization
 
-1. Have the service account share its entire Drive with your Google account
-2. You'll see all folders including "Automation/Site Pictures"
-3. You can add shortcuts to this folder to your Drive for easy access
-
-### Method 3: Use Drive API to List Files
-
-You can use the Google Drive API to programmatically list and access files uploaded by the service account.
+1. **Create a shortcut**: You can create a shortcut to the "Automation/Site Pictures" folder in your Drive's main view for easy access
+2. **Share with team**: You can share the parent folder with your team members to give them access to uploaded photos
+3. **Set up folder notifications**: In Google Drive, you can enable notifications for when new files are added to the folder
 
 ## Security Notes
 
@@ -182,12 +218,15 @@ Use this checklist to ensure Google Drive photo uploads are working:
 
 ```
 ☐ Google Drive API is enabled in Google Cloud Console
+☐ Created a folder in your regular Google Drive
+☐ Copied the folder ID from the Drive URL
+☐ Added GOOGLE_DRIVE_FOLDER_ID environment variable in Netlify
+☐ Shared the folder with service account email (Editor permission)
 ☐ Service account credentials (GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY) are set in Netlify
-☐ If using a folder in personal Drive, service account has Editor access to the folder
 ☐ Deployed the updated application code to Netlify
-☐ Tested uploading a photo and verified it appears in Drive
+☐ Tested uploading a photo and verified it appears in the correct folder in your Drive
 ☐ Checked that the filename format is DATE_ADDRESS
-☐ Verified photos are in "Automation/Site Pictures" folder
+☐ Verified photos are in "Automation/Site Pictures" folder inside your specified folder
 ☐ Confirmed Google Sheets data save still works correctly
 ```
 

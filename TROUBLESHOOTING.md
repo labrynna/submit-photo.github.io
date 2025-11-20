@@ -164,6 +164,35 @@ This guide helps you resolve common errors when using the Construction Site Phot
 
 ---
 
+### "Failed to upload photo to Google Drive: Service Accounts do not have storage quota"
+
+**Cause:** Service accounts don't have storage quota. The application is attempting to upload files to the service account's Drive root, which has no storage.
+
+**Solutions:**
+1. Set up a folder in your regular Google Drive
+2. Share that folder with your service account email (Editor permission)
+3. Get the folder ID from the Drive URL (e.g., `https://drive.google.com/drive/folders/FOLDER_ID_HERE`)
+4. Add `GOOGLE_DRIVE_FOLDER_ID` environment variable in Netlify with that folder ID
+5. Redeploy your application
+
+**Step-by-step guide:**
+1. Open your Google Drive (regular user account)
+2. Create a new folder (e.g., "Photo Uploads")
+3. Right-click the folder → Share
+4. Add your service account email (from GOOGLE_SERVICE_ACCOUNT_EMAIL)
+5. Grant "Editor" permission
+6. Open the folder in your browser
+7. Copy the folder ID from the URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+8. In Netlify: Site Settings → Build & deploy → Environment
+9. Add new variable: `GOOGLE_DRIVE_FOLDER_ID` = `FOLDER_ID_HERE`
+10. Save and trigger a new deployment
+
+See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for complete instructions.
+
+**Note:** Even though the photo upload fails, your data will still be saved to Google Sheets. The application is designed to continue working even if Drive upload fails.
+
+---
+
 ## General Troubleshooting Steps
 
 ### Check Configuration
