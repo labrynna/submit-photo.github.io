@@ -167,11 +167,19 @@ submit-photo.github.io/
 
 ## Troubleshooting
 
-**No text detected**: Ensure the photo is clear and text is readable
+For detailed troubleshooting help, see the **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** guide.
 
-**API errors**: Check that API keys are correct and APIs are enabled in Google Cloud Console
+Common issues:
 
-**Can't save to sheet**: Verify Sheet ID is correct and sheet permissions allow editing
+**"Failed to fetch" errors**: Check your internet connection and verify API keys are correct
+
+**"API key expired" errors**: Renew your API keys in Google Cloud Console or DeepSeek Platform
+
+**"No text detected"**: Ensure the photo is clear and text is readable
+
+**"Access denied" errors**: Check API key restrictions and Sheet sharing permissions
+
+**For comprehensive solutions to all error messages, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
 
 ## License
 
