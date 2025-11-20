@@ -1,8 +1,0 @@
-{
-  "name": "netlify-functions",
-  "version": "1.0.0",
-  "description": "Netlify Functions for Construction Site Photo Submission",
-  "dependencies": {
-    "google-auth-library": "^9.0.0"
-  }
-}
