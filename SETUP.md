@@ -60,9 +60,9 @@ This guide will walk you through setting up the Construction Site Photo Submissi
 
 In the first row, create these column headers (in this exact order):
 
-| A | B | C | D | E | F |
-|---|---|---|---|---|---|
-| Address | Company Name | Website | Phone | Date Added | Photo Text |
+| A | B | C | D | E | F | G | H |
+|---|---|---|---|---|---|---|---|
+| Address | Picture Date | Builder | Website | Contact Name | Contact Number | Email | Picture taken |
 
 #### 3. Configure Sharing
 

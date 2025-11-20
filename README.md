@@ -61,13 +61,13 @@ This application is now configured to use Netlify environment variables for secu
 1. Create a new Google Sheet
 2. Set up the following columns (in order):
    - Address
-   - Company Name
-   - Contact Name
-   - Email
+   - Picture Date
+   - Builder
    - Website
-   - Phone
-   - Date Added
-   - Photo Text
+   - Contact Name
+   - Contact Number
+   - Email
+   - Picture taken
 3. Share the sheet with your Service Account:
    - Click "Share" button
    - Add the Service Account email (from your JSON key file)

@@ -546,15 +546,16 @@ Return only valid JSON, no other text.`;
     }
 
     async addNewSite(formData) {
+        // Column mapping: Address, Picture Date, Builder, Website, Contact Name, Contact Number, Email, Picture taken
         const values = [[
-            formData.address,
-            formData.companyName,
-            formData.contactName,
-            formData.email,
-            formData.website,
-            formData.phone,
-            new Date().toLocaleDateString(),
-            formData.extractedText
+            formData.address,                      // Address (Column A)
+            new Date().toLocaleDateString(),       // Picture Date (Column B)
+            formData.companyName,                  // Builder (Column C)
+            formData.website,                      // Website (Column D)
+            formData.contactName,                  // Contact Name (Column E)
+            formData.phone,                        // Contact Number (Column F)
+            formData.email,                        // Email (Column G)
+            'Yes'                                  // Picture taken (Column H)
         ]];
 
         const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=append&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
@@ -595,16 +596,17 @@ Return only valid JSON, no other text.`;
     }
 
     async updateSiteData(rowNumber, formData) {
+        // Column mapping: Address, Picture Date, Builder, Website, Contact Name, Contact Number, Email, Picture taken
         const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:H${rowNumber}`;
         const values = [[
-            formData.address,
-            formData.companyName,
-            formData.contactName,
-            formData.email,
-            formData.website,
-            formData.phone,
-            new Date().toLocaleDateString(),
-            formData.extractedText
+            formData.address,                      // Address (Column A)
+            new Date().toLocaleDateString(),       // Picture Date (Column B)
+            formData.companyName,                  // Builder (Column C)
+            formData.website,                      // Website (Column D)
+            formData.contactName,                  // Contact Name (Column E)
+            formData.phone,                        // Contact Number (Column F)
+            formData.email,                        // Email (Column G)
+            'Yes'                                  // Picture taken (Column H)
         ]];
 
         const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=update&updateRange=${encodeURIComponent(range)}`;
