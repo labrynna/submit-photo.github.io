@@ -38,13 +38,25 @@ Before deploying, you must set up environment variables in Netlify:
 3. Click **"Edit variables"** or **"Add variable"**
 4. Add the following environment variables:
 
+#### For Google Sheets (Service Account - Recommended)
+
+**⚠️ Important**: Google Sheets API v4 requires Service Account authentication for write operations (API keys are NOT supported for append/update).
+
+For detailed instructions on setting up a Service Account, see **[SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md)**.
+
+| Variable Name | Description | Example |
+|--------------|-------------|---------|
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service Account email from JSON key file | `your-service-account@project.iam.gserviceaccount.com` |
+| `GOOGLE_PRIVATE_KEY` | Private key from JSON key file (include BEGIN/END lines) | `-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----\n` |
+| `SHEET_ID` | Your Google Sheet ID | `1A2B3C4D5E6F7G8H9I0J` |
+| `SHEET_NAME` | Sheet tab name (optional) | `Sites` (default if not set) |
+
+#### For Other APIs
+
 | Variable Name | Description | Example |
 |--------------|-------------|---------|
 | `VISION_API_KEY` | Google Cloud Vision API Key | `AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
 | `DEEPSEEK_API_KEY` | DeepSeek AI API Key | `sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
-| `SHEETS_API_KEY` | Google Sheets API Key | `AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
-| `SHEET_ID` | Your Google Sheet ID | `1A2B3C4D5E6F7G8H9I0J` |
-| `SHEET_NAME` | Sheet tab name (optional) | `Sites` (default if not set) |
 
 **Important**: Make sure to click **"Save"** after adding all variables.
 
@@ -194,23 +206,30 @@ If you haven't set up your APIs yet, follow these steps:
    - Phone
    - Date Added
    - Photo Text
-3. Share the sheet:
+3. Share the sheet with your Service Account:
    - Click "Share" button
-   - Change to "Anyone with the link can edit"
+   - Add the Service Account email (e.g., `your-service-account@project.iam.gserviceaccount.com`)
+   - Grant "Editor" permission
+   - Click "Send"
 4. Copy the Sheet ID from the URL:
    - URL format: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
    - The SHEET_ID is the long string between `/d/` and `/edit`
+
+**For detailed Service Account setup instructions, see [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md)**
 
 ## Environment Variables Summary
 
 Here's the complete list of environment variables you need to set in Netlify:
 
 ```bash
-# Required
+# Required for Google Sheets (Service Account Authentication)
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvQI...\n-----END PRIVATE KEY-----\n
+SHEET_ID=1A2B3C4D5E6F7G8H9I0J
+
+# Required for other APIs
 VISION_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 DEEPSEEK_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-SHEETS_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-SHEET_ID=1A2B3C4D5E6F7G8H9I0J
 
 # Optional (defaults to 'Sites' if not set)
 SHEET_NAME=Sites
