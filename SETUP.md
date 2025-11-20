@@ -58,11 +58,25 @@ This guide will walk you through setting up the Construction Site Photo Submissi
 
 #### 2. Set Up Columns
 
-In the first row, create these column headers (in this exact order):
+In the first row, create these column headers. The columns can be in any order - the application will automatically match data to the correct columns based on the column names:
+
+**Required column names (case-insensitive):**
+- Address
+- Picture Date
+- Builder
+- Website
+- Contact Name
+- Contact Number
+- Email
+- Picture taken
+
+**Example layout:**
 
 | A | B | C | D | E | F | G | H |
 |---|---|---|---|---|---|---|---|
 | Address | Picture Date | Builder | Website | Contact Name | Contact Number | Email | Picture taken |
+
+**Note:** You can arrange these columns in any order you prefer. The application dynamically maps the form data to the correct columns based on the header names in row 1.
 
 #### 3. Configure Sharing
 

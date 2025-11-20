@@ -471,8 +471,8 @@ Return only valid JSON, no other text.`;
             const existingSite = await this.findSiteByAddress(formData.address);
             
             if (existingSite) {
-                // Update existing site
-                await this.updateSiteData(existingSite.row, formData);
+                // Update existing site, passing the headers
+                await this.updateSiteData(existingSite.row, formData, existingSite.headers);
                 this.showSuccess(`Site updated successfully! (Row ${existingSite.row})`);
             } else {
                 // Add new site
@@ -488,52 +488,90 @@ Return only valid JSON, no other text.`;
         }
     }
 
+    /**
+     * Reads the sheet data and returns both headers and rows
+     * @returns {Promise<Object>} Object containing headers array and values array
+     */
+    async getSheetData() {
+        const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=read&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
+        let response;
+        
+        try {
+            response = await fetch(url);
+        } catch (networkError) {
+            console.error('Network error fetching sheet data:', networkError);
+            throw new Error('Failed to connect to Google Sheets. Please check your internet connection and try again.');
+        }
+        
+        if (!response.ok) {
+            let errorMessage = 'Failed to fetch sheet data';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error?.message || errorData.message || errorMessage;
+                
+                // Handle specific error cases
+                if (response.status === 400) {
+                    errorMessage = 'Invalid request. Please check your configuration.';
+                } else if (response.status === 403) {
+                    errorMessage = 'Access denied. Please check that your Sheet is shared properly.';
+                } else if (response.status === 404) {
+                    errorMessage = 'Sheet not found. Please verify your Sheet configuration.';
+                }
+            } catch (parseError) {
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.values || data.values.length === 0) {
+            return { headers: [], values: [] };
+        }
+        
+        return {
+            headers: data.values[0] || [],
+            values: data.values
+        };
+    }
+
+    /**
+     * Gets the column index for a given column name from headers
+     * @param {Array} headers - Array of column headers
+     * @param {string} columnName - Name of the column to find
+     * @returns {number} Column index or -1 if not found
+     */
+    getColumnIndex(headers, columnName) {
+        const normalizedName = columnName.toLowerCase().trim();
+        return headers.findIndex(header => 
+            header && header.toLowerCase().trim() === normalizedName
+        );
+    }
+
     async findSiteByAddress(address) {
         try {
-            const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=read&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
-            let response;
+            const sheetData = await this.getSheetData();
             
-            try {
-                response = await fetch(url);
-            } catch (networkError) {
-                console.error('Network error fetching sheet data:', networkError);
-                throw new Error('Failed to connect to Google Sheets. Please check your internet connection and try again.');
-            }
-            
-            if (!response.ok) {
-                let errorMessage = 'Failed to fetch sheet data';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error?.message || errorData.message || errorMessage;
-                    
-                    // Handle specific error cases
-                    if (response.status === 400) {
-                        errorMessage = 'Invalid request. Please check your configuration.';
-                    } else if (response.status === 403) {
-                        errorMessage = 'Access denied. Please check that your Sheet is shared properly.';
-                    } else if (response.status === 404) {
-                        errorMessage = 'Sheet not found. Please verify your Sheet configuration.';
-                    }
-                } catch (parseError) {
-                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                }
-                throw new Error(errorMessage);
-            }
-            
-            const data = await response.json();
-            
-            if (!data.values || data.values.length === 0) {
+            if (sheetData.values.length === 0) {
                 return null;
+            }
+            
+            // Find the Address column index
+            const addressColIndex = this.getColumnIndex(sheetData.headers, 'Address');
+            
+            if (addressColIndex === -1) {
+                throw new Error('Address column not found in Google Sheet. Please ensure the first row contains an "Address" column.');
             }
             
             // Find matching address (case-insensitive)
             const normalizedAddress = address.toLowerCase().trim();
-            for (let i = 1; i < data.values.length; i++) { // Skip header row
-                const row = data.values[i];
-                if (row[0] && row[0].toLowerCase().trim() === normalizedAddress) {
+            for (let i = 1; i < sheetData.values.length; i++) { // Skip header row
+                const row = sheetData.values[i];
+                if (row[addressColIndex] && row[addressColIndex].toLowerCase().trim() === normalizedAddress) {
                     return {
                         row: i + 1, // Sheet rows are 1-indexed
-                        data: row
+                        data: row,
+                        headers: sheetData.headers
                     };
                 }
             }
@@ -546,17 +584,44 @@ Return only valid JSON, no other text.`;
     }
 
     async addNewSite(formData) {
-        // Column mapping: Address, Picture Date, Builder, Website, Contact Name, Contact Number, Email, Picture taken
-        const values = [[
-            formData.address,                      // Address (Column A)
-            new Date().toLocaleDateString(),       // Picture Date (Column B)
-            formData.companyName,                  // Builder (Column C)
-            formData.website,                      // Website (Column D)
-            formData.contactName,                  // Contact Name (Column E)
-            formData.phone,                        // Contact Number (Column F)
-            formData.email,                        // Email (Column G)
-            'Yes'                                  // Picture taken (Column H)
-        ]];
+        // First, get the sheet headers to determine column order
+        const sheetData = await this.getSheetData();
+        
+        if (sheetData.headers.length === 0) {
+            throw new Error('Sheet headers not found. Please ensure the first row contains column names: Address, Picture Date, Builder, Website, Contact Name, Contact Number, Email, Picture taken');
+        }
+        
+        // Create a mapping of form data to column names
+        const dataMapping = {
+            'Address': formData.address,
+            'Picture Date': new Date().toLocaleDateString(),
+            'Builder': formData.companyName,
+            'Website': formData.website,
+            'Contact Name': formData.contactName,
+            'Contact Number': formData.phone,
+            'Email': formData.email,
+            'Picture taken': 'Yes'
+        };
+        
+        // Build the row array based on the actual column order in the sheet
+        const rowValues = [];
+        for (let i = 0; i < sheetData.headers.length; i++) {
+            const headerName = sheetData.headers[i];
+            const normalizedHeader = headerName.toLowerCase().trim();
+            
+            // Find matching data (case-insensitive)
+            let cellValue = '';
+            for (const [key, value] of Object.entries(dataMapping)) {
+                if (key.toLowerCase().trim() === normalizedHeader) {
+                    cellValue = value || '';
+                    break;
+                }
+            }
+            
+            rowValues.push(cellValue);
+        }
+        
+        const values = [rowValues];
 
         const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=append&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
         
@@ -595,19 +660,42 @@ Return only valid JSON, no other text.`;
         return await response.json();
     }
 
-    async updateSiteData(rowNumber, formData) {
-        // Column mapping: Address, Picture Date, Builder, Website, Contact Name, Contact Number, Email, Picture taken
-        const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:H${rowNumber}`;
-        const values = [[
-            formData.address,                      // Address (Column A)
-            new Date().toLocaleDateString(),       // Picture Date (Column B)
-            formData.companyName,                  // Builder (Column C)
-            formData.website,                      // Website (Column D)
-            formData.contactName,                  // Contact Name (Column E)
-            formData.phone,                        // Contact Number (Column F)
-            formData.email,                        // Email (Column G)
-            'Yes'                                  // Picture taken (Column H)
-        ]];
+    async updateSiteData(rowNumber, formData, headers) {
+        // Create a mapping of form data to column names
+        const dataMapping = {
+            'Address': formData.address,
+            'Picture Date': new Date().toLocaleDateString(),
+            'Builder': formData.companyName,
+            'Website': formData.website,
+            'Contact Name': formData.contactName,
+            'Contact Number': formData.phone,
+            'Email': formData.email,
+            'Picture taken': 'Yes'
+        };
+        
+        // Build the row array based on the actual column order in the sheet
+        const rowValues = [];
+        for (let i = 0; i < headers.length; i++) {
+            const headerName = headers[i];
+            const normalizedHeader = headerName.toLowerCase().trim();
+            
+            // Find matching data (case-insensitive)
+            let cellValue = '';
+            for (const [key, value] of Object.entries(dataMapping)) {
+                if (key.toLowerCase().trim() === normalizedHeader) {
+                    cellValue = value || '';
+                    break;
+                }
+            }
+            
+            rowValues.push(cellValue);
+        }
+        
+        const values = [rowValues];
+        
+        // Determine the range dynamically based on number of columns
+        const lastColumn = String.fromCharCode(65 + headers.length - 1); // A=65, B=66, etc.
+        const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:${lastColumn}${rowNumber}`;
 
         const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=update&updateRange=${encodeURIComponent(range)}`;
         

@@ -59,7 +59,7 @@ This application is now configured to use Netlify environment variables for secu
 ### 3. Google Sheets Setup
 
 1. Create a new Google Sheet
-2. Set up the following columns (in order):
+2. Set up the following columns in the first row (column names are case-insensitive, but must match exactly):
    - Address
    - Picture Date
    - Builder
@@ -68,6 +68,9 @@ This application is now configured to use Netlify environment variables for secu
    - Contact Number
    - Email
    - Picture taken
+   
+   **Note:** The columns can be in any order. The application will automatically match form data to the correct columns based on the column names in row 1.
+   
 3. Share the sheet with your Service Account:
    - Click "Share" button
    - Add the Service Account email (from your JSON key file)
