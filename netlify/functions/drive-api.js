@@ -18,6 +18,7 @@ exports.handler = async (event, context) => {
   // Get credentials from environment variables
   const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+  const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID; // Optional: Folder ID to upload to
   
   // Check for required environment variables
   if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
@@ -62,7 +63,9 @@ exports.handler = async (event, context) => {
 
     // Step 1: Find or create the "Automation/Site Pictures" folder
     const folderPath = ['Automation', 'Site Pictures'];
-    let parentFolderId = 'root';
+    // Use GOOGLE_DRIVE_FOLDER_ID if provided, otherwise use 'root'
+    // This allows uploading to a folder shared with the service account
+    let parentFolderId = GOOGLE_DRIVE_FOLDER_ID || 'root';
     
     for (const folderName of folderPath) {
       // Search for the folder

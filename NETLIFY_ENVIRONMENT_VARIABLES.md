@@ -47,6 +47,13 @@ Set these in your Netlify dashboard: **Site settings → Build & deploy → Envi
 - **Example**: `Sites` or `Construction_Sites`
 - **Required**: No
 
+### 7. GOOGLE_DRIVE_FOLDER_ID
+- **Description**: Folder ID in your Google Drive where photos will be uploaded
+- **Where to get**: From your Google Drive folder URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+- **Example**: `1A2B3C4D5E6F7G8H9I0J`
+- **Required**: **Highly Recommended** - Service accounts don't have storage quota, so you should upload to a folder in your regular Drive that you've shared with the service account
+- **Note**: If not set, the application will attempt to upload to the service account's Drive, which will fail due to storage quota limitations. See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for detailed setup instructions.
+
 ## How to Set Environment Variables in Netlify
 
 1. Log in to your Netlify dashboard
@@ -117,6 +124,9 @@ Copy and paste this checklist when setting up your Netlify environment variables
 ☐ GOOGLE_PRIVATE_KEY = -----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 ☐ SHEET_ID = your_google_sheet_id
 ☐ SHEET_NAME = Sites (optional)
+☐ GOOGLE_DRIVE_FOLDER_ID = your_drive_folder_id (highly recommended)
 ```
 
-**Important**: For Google Sheets access, you MUST use Service Account authentication. See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for complete setup instructions.
+**Important**: 
+- For Google Sheets access, you MUST use Service Account authentication. See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for complete setup instructions.
+- For Google Drive photo uploads, you should set GOOGLE_DRIVE_FOLDER_ID to a folder in your regular Drive that you've shared with the service account. See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for complete setup instructions.
