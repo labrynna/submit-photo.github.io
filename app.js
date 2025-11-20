@@ -452,8 +452,8 @@ Return only valid JSON, no other text.`;
             dateAdded: new Date().toISOString()
         };
 
-        if (!formData.address || !formData.companyName) {
-            this.showError('Please fill in required fields: Address and Company Name');
+        if (!formData.address) {
+            this.showError('Please fill in the required field: Address');
             return;
         }
 

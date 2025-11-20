@@ -46,8 +46,8 @@ This application is now configured to use Netlify environment variables for secu
    - Google Cloud Vision API
    - Google Sheets API
 3. Create API credentials:
-   - Go to "Credentials" → "Create Credentials" → "API Key"
-   - Create two API keys (or use one for both services)
+   - **For Vision API**: Go to "Credentials" → "Create Credentials" → "API Key"
+   - **For Sheets API**: Create a Service Account (see [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md))
    - Restrict the keys to the specific APIs for security
 
 ### 2. DeepSeek API Setup
@@ -68,16 +68,19 @@ This application is now configured to use Netlify environment variables for secu
    - Phone
    - Date Added
    - Photo Text
-3. Share the sheet:
+3. Share the sheet with your Service Account:
    - Click "Share" button
-   - Change to "Anyone with the link can edit" (or use a service account for better security)
+   - Add the Service Account email (from your JSON key file)
+   - Grant "Editor" permission
 4. Copy the Sheet ID from the URL:
    - Format: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
+
+**Important**: For Google Sheets write access, you MUST use Service Account authentication. See **[SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md)** for detailed instructions.
 
 ### 4. Application Configuration
 
 **For Netlify (Recommended):**
-Follow the [Netlify Deployment Guide](NETLIFY_DEPLOYMENT.md) to set up environment variables.
+Follow the [Netlify Deployment Guide](NETLIFY_DEPLOYMENT.md) and [Service Account Setup Guide](SERVICE_ACCOUNT_SETUP.md) to set up environment variables.
 
 **For GitHub Pages or Local Development:**
 1. Copy `config.template.js` to `config.js`

@@ -121,16 +121,32 @@ This guide helps you resolve common errors when using the Construction Site Phot
 
 ---
 
-### "Google Sheets: Access denied. Please check that your Sheet is shared properly and the API key is valid."
+### "Failed to save data: API keys are not supported by this API. Expected OAuth2 access token or other authentication credentials"
 
-**Cause:** The Google Sheet is not publicly accessible or has incorrect permissions.
+**Cause:** This is a critical error - Google Sheets API v4 does NOT support API keys for write operations (append/update).
+
+**Solutions:**
+1. You MUST switch to Service Account authentication
+2. Follow the complete guide: [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md)
+3. Set up `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` in Netlify environment variables
+4. Remove the old `SHEETS_API_KEY` environment variable (it's no longer used)
+5. Share your Google Sheet with the Service Account email
+6. Redeploy your Netlify site after updating environment variables
+
+---
+
+### "Google Sheets: Access denied. Please check that your Sheet is shared properly."
+
+**Cause:** The Google Sheet is not shared with the Service Account or has incorrect permissions.
 
 **Solutions:**
 1. Open your Google Sheet
 2. Click the "Share" button
-3. Change sharing settings to "Anyone with the link can edit"
-4. Alternatively, use a service account for better security
-5. Verify your API key has permissions for the Sheets API
+3. Add the Service Account email (e.g., `your-service-account@project.iam.gserviceaccount.com`)
+4. Grant "Editor" permission
+5. Click "Send" to save
+6. Verify the Service Account email is correct in your Netlify environment variables
+7. See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for detailed instructions
 
 ---
 
@@ -143,7 +159,7 @@ This guide helps you resolve common errors when using the Construction Site Phot
 2. Copy the Sheet ID from the URL:
    - URL format: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
    - Copy only the SHEET_ID_HERE part
-3. Update your config.js (or Netlify environment variables) with the correct ID
+3. Update your Netlify environment variables with the correct SHEET_ID
 4. Verify the SHEET_NAME matches the tab name in your spreadsheet (default: "Sites")
 
 ---

@@ -20,7 +20,8 @@ const SHEET_NAME = process.env.SHEET_NAME || 'Sites';
 const missingVars = [];
 if (!process.env.VISION_API_KEY) missingVars.push('VISION_API_KEY');
 if (!process.env.DEEPSEEK_API_KEY) missingVars.push('DEEPSEEK_API_KEY');
-if (!process.env.SHEETS_API_KEY) missingVars.push('SHEETS_API_KEY');
+if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) missingVars.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+if (!process.env.GOOGLE_PRIVATE_KEY) missingVars.push('GOOGLE_PRIVATE_KEY');
 if (!process.env.SHEET_ID) missingVars.push('SHEET_ID');
 
 if (missingVars.length > 0) {
@@ -28,6 +29,7 @@ if (missingVars.length > 0) {
     missingVars.forEach(varName => console.error(`  - ${varName}`));
     console.error('\nPlease set these variables in your Netlify dashboard:');
     console.error('Site settings → Build & deploy → Environment → Environment variables');
+    console.error('\nFor Google Sheets authentication, see SERVICE_ACCOUNT_SETUP.md');
     process.exit(1);
 }
 

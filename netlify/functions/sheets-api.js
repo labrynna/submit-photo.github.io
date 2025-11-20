@@ -1,8 +1,10 @@
 /**
  * Netlify Function: Google Sheets API proxy
  * This function securely handles Google Sheets API requests server-side,
- * keeping the API key secure and not exposed to clients.
+ * using Service Account authentication for secure access.
  */
+
+const { GoogleAuth } = require('google-auth-library');
 
 exports.handler = async (event, context) => {
   // Only allow GET and POST requests
@@ -13,20 +15,42 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Get API credentials from environment variables
-  const SHEETS_API_KEY = process.env.SHEETS_API_KEY;
+  // Get credentials from environment variables
+  const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
   const SHEET_ID = process.env.SHEET_ID;
   const SHEET_NAME = process.env.SHEET_NAME || 'Sites';
   
-  if (!SHEETS_API_KEY || !SHEET_ID) {
-    console.error('SHEETS_API_KEY or SHEET_ID environment variable is not set');
+  // Check for required environment variables
+  if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !SHEET_ID) {
+    console.error('Missing required environment variables. Required: GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, SHEET_ID');
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Server configuration error' })
+      body: JSON.stringify({ 
+        error: 'Server configuration error',
+        message: 'Service Account credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.'
+      })
     };
   }
 
   try {
+    // Initialize Google Auth with Service Account
+    const auth = new GoogleAuth({
+      credentials: {
+        client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
+      },
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    // Get access token
+    const client = await auth.getClient();
+    const accessToken = await client.getAccessToken();
+    
+    if (!accessToken.token) {
+      throw new Error('Failed to obtain access token from Service Account');
+    }
+
     const sheetsBaseUrl = 'https://sheets.googleapis.com/v4/spreadsheets';
     
     // Parse query parameters to determine the action
@@ -38,18 +62,19 @@ exports.handler = async (event, context) => {
     let fetchOptions = {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken.token}`,
       }
     };
 
     if (action === 'read' || event.httpMethod === 'GET') {
       // Read data from sheet
-      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${range}?key=${SHEETS_API_KEY.trim()}`;
+      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${range}`;
       fetchOptions.method = 'GET';
       
     } else if (action === 'append') {
       // Append data to sheet
       const requestBody = JSON.parse(event.body);
-      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${range}:append?valueInputOption=USER_ENTERED&key=${SHEETS_API_KEY.trim()}`;
+      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${range}:append?valueInputOption=USER_ENTERED`;
       fetchOptions.method = 'POST';
       fetchOptions.body = JSON.stringify(requestBody);
       
@@ -57,7 +82,7 @@ exports.handler = async (event, context) => {
       // Update specific row in sheet
       const requestBody = JSON.parse(event.body);
       const updateRange = queryParams.updateRange || range;
-      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${updateRange}?valueInputOption=USER_ENTERED&key=${SHEETS_API_KEY.trim()}`;
+      url = `${sheetsBaseUrl}/${SHEET_ID.trim()}/values/${updateRange}?valueInputOption=USER_ENTERED`;
       fetchOptions.method = 'PUT';
       fetchOptions.body = JSON.stringify(requestBody);
       
