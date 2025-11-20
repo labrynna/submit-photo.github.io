@@ -19,19 +19,19 @@ Set these in your Netlify dashboard: **Site settings → Build & deploy → Envi
 - **Required**: Yes
 
 ### 3. GOOGLE_SERVICE_ACCOUNT_EMAIL
-- **Description**: Service Account email for Google Sheets API authentication
+- **Description**: Service Account email for Google Sheets and Drive API authentication
 - **Where to get**: From your Service Account JSON key file (`client_email` field)
 - **Example**: `your-service-account@your-project.iam.gserviceaccount.com`
 - **Required**: Yes
 - **Note**: See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for detailed setup instructions
 
 ### 4. GOOGLE_PRIVATE_KEY
-- **Description**: Service Account private key for Google Sheets API authentication
+- **Description**: Service Account private key for Google Sheets and Drive API authentication
 - **Where to get**: From your Service Account JSON key file (`private_key` field)
 - **Example**: `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkq...\n-----END PRIVATE KEY-----\n`
 - **Required**: Yes
 - **Important**: Include the BEGIN and END lines, and keep newlines as `\n`
-- **Note**: See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for detailed setup instructions
+- **Note**: See [SERVICE_ACCOUNT_SETUP.md](SERVICE_ACCOUNT_SETUP.md) for detailed setup instructions. The same service account is used for both Sheets and Drive access.
 
 ### 5. SHEET_ID
 - **Description**: Your Google Sheet ID where data will be stored

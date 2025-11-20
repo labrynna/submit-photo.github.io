@@ -49,7 +49,8 @@ const CONFIG = {
     // Netlify Functions endpoints (serverless functions that proxy API calls)
     VISION_API_ENDPOINT: '/.netlify/functions/vision-api',
     DEEPSEEK_API_ENDPOINT: '/.netlify/functions/deepseek-api',
-    SHEETS_API_ENDPOINT: '/.netlify/functions/sheets-api'
+    SHEETS_API_ENDPOINT: '/.netlify/functions/sheets-api',
+    DRIVE_API_ENDPOINT: '/.netlify/functions/drive-api'
 };
 `;
 
@@ -63,4 +64,5 @@ console.log('  - API keys are kept secure in Netlify Functions');
 console.log('  - Vision API endpoint: /.netlify/functions/vision-api');
 console.log('  - DeepSeek API endpoint: /.netlify/functions/deepseek-api');
 console.log('  - Sheets API endpoint: /.netlify/functions/sheets-api');
+console.log('  - Drive API endpoint: /.netlify/functions/drive-api');
 
