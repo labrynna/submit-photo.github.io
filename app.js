@@ -170,20 +170,50 @@ class PhotoSubmissionApp {
             }]
         };
 
-        const response = await fetch(
-            `${CONFIG.VISION_API_URL}?key=${CONFIG.VISION_API_KEY.trim()}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
+        let response;
+        try {
+            response = await fetch(
+                `${CONFIG.VISION_API_URL}?key=${CONFIG.VISION_API_KEY.trim()}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                }
+            );
+        } catch (networkError) {
+            console.error('Network error calling Vision API:', networkError);
+            throw new Error('Failed to connect to Google Vision API. Please check your internet connection and try again.');
+        }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error('Google Vision API: ' + (errorData.error?.message || 'Request failed'));
+            let errorMessage = 'Request failed';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error?.message || errorMessage;
+                
+                // Handle specific error cases
+                if (response.status === 400 && errorMessage.includes('API key')) {
+                    errorMessage = 'Invalid API key. Please check your Google Vision API key in config.js';
+                } else if (response.status === 403) {
+                    if (errorMessage.includes('expired')) {
+                        errorMessage = 'API key expired. Please renew your Google Vision API key in Google Cloud Console.';
+                    } else if (errorMessage.includes('not enabled')) {
+                        errorMessage = 'Google Vision API is not enabled. Please enable it in Google Cloud Console.';
+                    } else if (errorMessage.includes('quota')) {
+                        errorMessage = 'API quota exceeded. Please check your usage limits in Google Cloud Console.';
+                    } else {
+                        errorMessage = 'Access denied. Please check API key restrictions in Google Cloud Console.';
+                    }
+                } else if (response.status === 429) {
+                    errorMessage = 'Too many requests. Please wait a moment and try again.';
+                }
+            } catch (parseError) {
+                console.error('Error parsing Vision API error response:', parseError);
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error('Google Vision API: ' + errorMessage);
         }
 
         return await response.json();
@@ -232,21 +262,45 @@ Return only valid JSON, no other text.`;
             max_tokens: 500
         };
 
-        const response = await fetch(
-            CONFIG.DEEPSEEK_API_URL,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${deepseekApiKey}`
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
+        let response;
+        try {
+            response = await fetch(
+                CONFIG.DEEPSEEK_API_URL,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${deepseekApiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                }
+            );
+        } catch (networkError) {
+            console.error('Network error calling DeepSeek API:', networkError);
+            throw new Error('Failed to connect to DeepSeek API. Please check your internet connection and try again.');
+        }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error('DeepSeek API: ' + (errorData.error?.message || 'Request failed'));
+            let errorMessage = 'Request failed';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error?.message || errorMessage;
+                
+                // Handle specific error cases
+                if (response.status === 401) {
+                    errorMessage = 'Invalid or expired API key. Please check your DeepSeek API key in config.js or renew it at platform.deepseek.com';
+                } else if (response.status === 403) {
+                    errorMessage = 'Access denied. Please verify your DeepSeek API key has the necessary permissions.';
+                } else if (response.status === 429) {
+                    errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+                } else if (response.status === 402) {
+                    errorMessage = 'Insufficient credits. Please add credits to your DeepSeek account.';
+                }
+            } catch (parseError) {
+                console.error('Error parsing DeepSeek API error response:', parseError);
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error('DeepSeek API: ' + errorMessage);
         }
 
         const data = await response.json();
@@ -450,10 +504,33 @@ Return only valid JSON, no other text.`;
     async findSiteByAddress(address) {
         try {
             const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}?key=${CONFIG.SHEETS_API_KEY.trim()}`;
-            const response = await fetch(url);
+            let response;
+            
+            try {
+                response = await fetch(url);
+            } catch (networkError) {
+                console.error('Network error fetching sheet data:', networkError);
+                throw new Error('Failed to connect to Google Sheets. Please check your internet connection and try again.');
+            }
             
             if (!response.ok) {
-                throw new Error('Failed to fetch sheet data');
+                let errorMessage = 'Failed to fetch sheet data';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error?.message || errorMessage;
+                    
+                    // Handle specific error cases
+                    if (response.status === 400 && errorMessage.includes('API key')) {
+                        errorMessage = 'Invalid API key. Please check your Google Sheets API key in config.js';
+                    } else if (response.status === 403) {
+                        errorMessage = 'Access denied. Please check that your Sheet is shared properly and the API key is valid.';
+                    } else if (response.status === 404) {
+                        errorMessage = 'Sheet not found. Please verify the SHEET_ID in config.js is correct.';
+                    }
+                } catch (parseError) {
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -477,7 +554,7 @@ Return only valid JSON, no other text.`;
             return null;
         } catch (error) {
             console.error('Error finding site:', error);
-            return null;
+            throw error; // Re-throw to be handled by caller
         }
     }
 
@@ -495,17 +572,36 @@ Return only valid JSON, no other text.`;
 
         const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}:append?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
         
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values })
-        });
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values })
+            });
+        } catch (networkError) {
+            console.error('Network error adding site:', networkError);
+            throw new Error('Failed to connect to Google Sheets. Please check your internet connection and try again.');
+        }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to add site to sheet');
+            let errorMessage = 'Failed to add site to sheet';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error?.message || errorMessage;
+                
+                // Handle specific error cases
+                if (response.status === 403) {
+                    errorMessage = 'Permission denied. Please ensure the Sheet is shared with "Anyone with the link can edit".';
+                } else if (response.status === 404) {
+                    errorMessage = 'Sheet not found. Please verify the SHEET_ID and SHEET_NAME in config.js.';
+                }
+            } catch (parseError) {
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
 
         return await response.json();
@@ -526,17 +622,36 @@ Return only valid JSON, no other text.`;
 
         const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${range}?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
         
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values })
-        });
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values })
+            });
+        } catch (networkError) {
+            console.error('Network error updating site:', networkError);
+            throw new Error('Failed to connect to Google Sheets. Please check your internet connection and try again.');
+        }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to update site in sheet');
+            let errorMessage = 'Failed to update site in sheet';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error?.message || errorMessage;
+                
+                // Handle specific error cases
+                if (response.status === 403) {
+                    errorMessage = 'Permission denied. Please ensure the Sheet is shared with "Anyone with the link can edit".';
+                } else if (response.status === 404) {
+                    errorMessage = 'Sheet not found. Please verify the SHEET_ID and SHEET_NAME in config.js.';
+                }
+            } catch (parseError) {
+                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
 
         return await response.json();
