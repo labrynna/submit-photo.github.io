@@ -87,10 +87,9 @@ class PhotoSubmissionApp {
             return;
         }
 
-        // Check if API key is configured
-        const visionApiKey = CONFIG.VISION_API_KEY ? CONFIG.VISION_API_KEY.trim() : '';
-        if (!visionApiKey || visionApiKey === 'YOUR_GOOGLE_VISION_API_KEY_HERE') {
-            this.showError('Google Vision API key is not configured. Please update config.js with your API key.');
+        // Check if API endpoints are configured
+        if (!CONFIG.VISION_API_ENDPOINT) {
+            this.showError('Vision API endpoint is not configured. Please check config.js');
             return;
         }
 
@@ -149,13 +148,11 @@ class PhotoSubmissionApp {
     }
 
     /**
-     * Calls Google Cloud Vision API to perform OCR on the image
+     * Calls Google Cloud Vision API via Netlify Function to perform OCR on the image
      * @param {string} base64Image - Base64 encoded image data
      * @returns {Promise<Object>} Vision API response
      * 
-     * @security Note: API key is exposed in client-side code.
-     * For production use, implement a backend proxy to hide the API key.
-     * Use HTTP referrer restrictions in Google Cloud Console.
+     * @security API key is kept secure server-side in Netlify Functions.
      */
     async callVisionAPI(base64Image) {
         const requestBody = {
@@ -173,7 +170,7 @@ class PhotoSubmissionApp {
         let response;
         try {
             response = await fetch(
-                `${CONFIG.VISION_API_URL}?key=${CONFIG.VISION_API_KEY.trim()}`,
+                CONFIG.VISION_API_ENDPOINT,
                 {
                     method: 'POST',
                     headers: {
@@ -191,7 +188,7 @@ class PhotoSubmissionApp {
             let errorMessage = 'Request failed';
             try {
                 const errorData = await response.json();
-                errorMessage = errorData.error?.message || errorMessage;
+                errorMessage = errorData.error?.message || errorData.message || errorMessage;
                 
                 // Handle specific error cases
                 if (response.status === 400 && errorMessage.includes('API key')) {
@@ -220,17 +217,15 @@ class PhotoSubmissionApp {
     }
 
     /**
-     * Calls DeepSeek API to analyze extracted text and identify structured information
+     * Calls DeepSeek API via Netlify Function to analyze extracted text and identify structured information
      * @param {string} text - Raw text extracted from the image
      * @returns {Promise<Object>} Parsed data with identified fields
      * 
-     * @security Note: API key is exposed in client-side code.
-     * For production use, implement a backend proxy to hide the API key.
+     * @security API key is kept secure server-side in Netlify Functions.
      */
     async callDeepSeekAPI(text) {
-        const deepseekApiKey = CONFIG.DEEPSEEK_API_KEY ? CONFIG.DEEPSEEK_API_KEY.trim() : '';
-        if (!deepseekApiKey || deepseekApiKey === 'YOUR_DEEPSEEK_API_KEY_HERE') {
-            throw new Error('DeepSeek API: API key is not configured. Please update config.js with your API key.');
+        if (!CONFIG.DEEPSEEK_API_ENDPOINT) {
+            throw new Error('DeepSeek API endpoint is not configured. Please check config.js');
         }
 
         const prompt = `Analyze the following text extracted from a construction site photo and identify the following information:
@@ -265,12 +260,11 @@ Return only valid JSON, no other text.`;
         let response;
         try {
             response = await fetch(
-                CONFIG.DEEPSEEK_API_URL,
+                CONFIG.DEEPSEEK_API_ENDPOINT,
                 {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${deepseekApiKey}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(requestBody)
                 }
@@ -284,7 +278,7 @@ Return only valid JSON, no other text.`;
             let errorMessage = 'Request failed';
             try {
                 const errorData = await response.json();
-                errorMessage = errorData.error?.message || errorMessage;
+                errorMessage = errorData.error?.message || errorData.message || errorMessage;
                 
                 // Handle specific error cases
                 if (response.status === 401) {
@@ -463,16 +457,9 @@ Return only valid JSON, no other text.`;
             return;
         }
 
-        // Check if Sheets API is configured
-        const sheetsApiKey = CONFIG.SHEETS_API_KEY ? CONFIG.SHEETS_API_KEY.trim() : '';
-        if (!sheetsApiKey || sheetsApiKey === 'YOUR_GOOGLE_SHEETS_API_KEY_HERE') {
-            this.showError('Google Sheets API key is not configured. Please update config.js with your API key.');
-            return;
-        }
-
-        const sheetId = CONFIG.SHEET_ID ? CONFIG.SHEET_ID.trim() : '';
-        if (!sheetId || sheetId === 'YOUR_GOOGLE_SHEET_ID_HERE') {
-            this.showError('Google Sheet ID is not configured. Please update config.js with your Sheet ID.');
+        // Check if Sheets API endpoint is configured
+        if (!CONFIG.SHEETS_API_ENDPOINT) {
+            this.showError('Google Sheets API endpoint is not configured. Please check config.js');
             return;
         }
 
@@ -503,7 +490,7 @@ Return only valid JSON, no other text.`;
 
     async findSiteByAddress(address) {
         try {
-            const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}?key=${CONFIG.SHEETS_API_KEY.trim()}`;
+            const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=read&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
             let response;
             
             try {
@@ -517,15 +504,15 @@ Return only valid JSON, no other text.`;
                 let errorMessage = 'Failed to fetch sheet data';
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.error?.message || errorMessage;
+                    errorMessage = errorData.error?.message || errorData.message || errorMessage;
                     
                     // Handle specific error cases
-                    if (response.status === 400 && errorMessage.includes('API key')) {
-                        errorMessage = 'Invalid API key. Please check your Google Sheets API key in config.js';
+                    if (response.status === 400) {
+                        errorMessage = 'Invalid request. Please check your configuration.';
                     } else if (response.status === 403) {
-                        errorMessage = 'Access denied. Please check that your Sheet is shared properly and the API key is valid.';
+                        errorMessage = 'Access denied. Please check that your Sheet is shared properly.';
                     } else if (response.status === 404) {
-                        errorMessage = 'Sheet not found. Please verify the SHEET_ID in config.js is correct.';
+                        errorMessage = 'Sheet not found. Please verify your Sheet configuration.';
                     }
                 } catch (parseError) {
                     errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -570,7 +557,7 @@ Return only valid JSON, no other text.`;
             formData.extractedText
         ]];
 
-        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${CONFIG.SHEET_NAME}:append?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
+        const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=append&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
         
         let response;
         try {
@@ -590,7 +577,7 @@ Return only valid JSON, no other text.`;
             let errorMessage = 'Failed to add site to sheet';
             try {
                 const errorData = await response.json();
-                errorMessage = errorData.error?.message || errorMessage;
+                errorMessage = errorData.error?.message || errorData.message || errorMessage;
                 
                 // Handle specific error cases
                 if (response.status === 403) {
@@ -620,12 +607,12 @@ Return only valid JSON, no other text.`;
             formData.extractedText
         ]];
 
-        const url = `${CONFIG.SHEETS_API_URL}/${CONFIG.SHEET_ID.trim()}/values/${range}?valueInputOption=USER_ENTERED&key=${CONFIG.SHEETS_API_KEY.trim()}`;
+        const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=update&updateRange=${encodeURIComponent(range)}`;
         
         let response;
         try {
             response = await fetch(url, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -640,7 +627,7 @@ Return only valid JSON, no other text.`;
             let errorMessage = 'Failed to update site in sheet';
             try {
                 const errorData = await response.json();
-                errorMessage = errorData.error?.message || errorMessage;
+                errorMessage = errorData.error?.message || errorData.message || errorMessage;
                 
                 // Handle specific error cases
                 if (response.status === 403) {
