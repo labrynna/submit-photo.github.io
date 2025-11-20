@@ -37,19 +37,19 @@ const configContent = `// Configuration file for API keys and settings
 
 const CONFIG = {
     // Google Cloud Vision API Key
-    VISION_API_KEY: '${VISION_API_KEY}',
+    VISION_API_KEY: ${JSON.stringify(VISION_API_KEY)},
     
     // DeepSeek API Key
-    DEEPSEEK_API_KEY: '${DEEPSEEK_API_KEY}',
+    DEEPSEEK_API_KEY: ${JSON.stringify(DEEPSEEK_API_KEY)},
     
     // Google Sheets API Configuration
-    SHEETS_API_KEY: '${SHEETS_API_KEY}',
+    SHEETS_API_KEY: ${JSON.stringify(SHEETS_API_KEY)},
     
     // Google Sheet ID (from the sheet URL)
-    SHEET_ID: '${SHEET_ID}',
+    SHEET_ID: ${JSON.stringify(SHEET_ID)},
     
     // Sheet name/tab within the spreadsheet
-    SHEET_NAME: '${SHEET_NAME}',
+    SHEET_NAME: ${JSON.stringify(SHEET_NAME)},
     
     // API endpoints
     VISION_API_URL: 'https://vision.googleapis.com/v1/images:annotate',
@@ -66,5 +66,5 @@ console.log('✓ config.js generated successfully from environment variables');
 console.log(`  - VISION_API_KEY: ${VISION_API_KEY.substring(0, 10)}...`);
 console.log(`  - DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY.substring(0, 10)}...`);
 console.log(`  - SHEETS_API_KEY: ${SHEETS_API_KEY.substring(0, 10)}...`);
-console.log(`  - SHEET_ID: ${SHEET_ID}`);
+console.log(`  - SHEET_ID: ${SHEET_ID.substring(0, 10)}...`);
 console.log(`  - SHEET_NAME: ${SHEET_NAME}`);
