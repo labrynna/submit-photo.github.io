@@ -19,3 +19,8 @@ npm-debug.log*
 # Temporary files
 /tmp/
 *.tmp
+
+# Local configuration with API keys (for development)
+# Note: config.js is tracked but should not contain real keys
+# Use config.template.js as a reference for local development
+config.local.js
