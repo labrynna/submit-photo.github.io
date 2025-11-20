@@ -183,7 +183,7 @@ class PhotoSubmissionApp {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Vision API request failed');
+            throw new Error('Google Vision API: ' + (errorData.error?.message || 'Request failed'));
         }
 
         return await response.json();
@@ -200,7 +200,7 @@ class PhotoSubmissionApp {
     async callDeepSeekAPI(text) {
         const deepseekApiKey = CONFIG.DEEPSEEK_API_KEY ? CONFIG.DEEPSEEK_API_KEY.trim() : '';
         if (!deepseekApiKey || deepseekApiKey === 'YOUR_DEEPSEEK_API_KEY_HERE') {
-            throw new Error('DeepSeek API key is not configured. Please update config.js with your API key.');
+            throw new Error('DeepSeek API: API key is not configured. Please update config.js with your API key.');
         }
 
         const prompt = `Analyze the following text extracted from a construction site photo and identify the following information:
@@ -246,7 +246,7 @@ Return only valid JSON, no other text.`;
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'DeepSeek API request failed');
+            throw new Error('DeepSeek API: ' + (errorData.error?.message || 'Request failed'));
         }
 
         const data = await response.json();
@@ -276,11 +276,11 @@ Return only valid JSON, no other text.`;
             } catch (parseError) {
                 console.error('Error parsing DeepSeek response:', parseError);
                 console.error('Response text:', responseText);
-                throw new Error('Failed to parse DeepSeek API response');
+                throw new Error('DeepSeek API: Failed to parse API response');
             }
         }
         
-        throw new Error('Invalid DeepSeek API response format');
+        throw new Error('DeepSeek API: Invalid response format');
     }
 
     extractTextFromVisionResponse(response) {
@@ -290,7 +290,7 @@ Return only valid JSON, no other text.`;
             response.responses[0].textAnnotations.length > 0) {
             return response.responses[0].textAnnotations[0].description;
         }
-        throw new Error('No text detected in the image');
+        throw new Error('Google Vision API: No text detected in the image');
     }
 
     /**
