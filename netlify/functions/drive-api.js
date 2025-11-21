@@ -24,13 +24,13 @@ exports.handler = async (event, context) => {
   
   // Check for required environment variables and provide detailed feedback
   const missingVars = [];
-  if (!GOOGLE_OAUTH_CLIENT_ID || GOOGLE_OAUTH_CLIENT_ID === '') {
+  if (!GOOGLE_OAUTH_CLIENT_ID) {
     missingVars.push('GOOGLE_OAUTH_CLIENT_ID');
   }
-  if (!GOOGLE_OAUTH_CLIENT_SECRET || GOOGLE_OAUTH_CLIENT_SECRET === '') {
+  if (!GOOGLE_OAUTH_CLIENT_SECRET) {
     missingVars.push('GOOGLE_OAUTH_CLIENT_SECRET');
   }
-  if (!GOOGLE_OAUTH_REFRESH_TOKEN || GOOGLE_OAUTH_REFRESH_TOKEN === '') {
+  if (!GOOGLE_OAUTH_REFRESH_TOKEN) {
     missingVars.push('GOOGLE_OAUTH_REFRESH_TOKEN');
   }
   
