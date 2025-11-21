@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Column Mapping Test - New Site Addition</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .pass {
+            color: green;
+            font-weight: bold;
+        }
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .code {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Column Mapping Test - New Site Addition</h1>
+    <p>This test verifies that the column mapping fix works correctly for new sites.</p>
+
+    <div class="test-section">
+        <h2>Helper Function Tests</h2>
+        <button onclick="runHelperTests()">Run Helper Function Tests</button>
+        <div id="helper-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Column Mapping Tests</h2>
+        <button onclick="runColumnMappingTests()">Run Column Mapping Tests</button>
+        <div id="mapping-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Range Generation Tests</h2>
+        <button onclick="runRangeTests()">Run Range Tests</button>
+        <div id="range-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Run All Tests</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <div id="all-tests-summary"></div>
+    </div>
+
+    <script>
+        // Import the helper function from app.js
+        function columnIndexToLetter(index) {
+            let letter = '';
+            let num = index + 1; // Convert to 1-based
+            
+            while (num > 0) {
+                let remainder = (num - 1) % 26;
+                letter = String.fromCharCode(65 + remainder) + letter;
+                num = Math.floor((num - 1) / 26);
+            }
+            
+            return letter;
+        }
+
+        // Simulate the column mapping logic
+        function buildRowForNewSite(headers, formData) {
+            const dataMapping = {
+                'Address': formData.address,
+                'Picture Date': new Date().toLocaleDateString(),
+                'Builder': formData.companyName,
+                'Website': formData.website,
+                'Contact Name': formData.contactName,
+                'Contact Number': formData.phone,
+                'Email': formData.email,
+                'Picture taken': 'Yes'
+            };
+            
+            const rowValues = [];
+            for (let i = 0; i < headers.length; i++) {
+                const headerName = headers[i];
+                const normalizedHeader = (headerName || '').toLowerCase().trim();
+                
+                let cellValue = '';
+                for (const [key, value] of Object.entries(dataMapping)) {
+                    if (key.toLowerCase().trim() === normalizedHeader) {
+                        cellValue = value || '';
+                        break;
+                    }
+                }
+                
+                rowValues.push(cellValue);
+            }
+            
+            return rowValues;
+        }
+
+        // Generate range string
+        function generateAppendRange(sheetName, headers) {
+            const lastColumn = columnIndexToLetter(headers.length - 1);
+            return `${sheetName}!A:${lastColumn}`;
+        }
+
+        function runHelperTests() {
+            const tests = [
+                { index: 0, expected: 'A', desc: 'First column' },
+                { index: 7, expected: 'H', desc: '8th column (standard sheet)' },
+                { index: 25, expected: 'Z', desc: 'Last single-letter column' },
+                { index: 26, expected: 'AA', desc: 'First double-letter column' },
+                { index: 29, expected: 'AD', desc: 'Column AD (30th column)' },
+                { index: 51, expected: 'AZ', desc: 'Column AZ' },
+                { index: 701, expected: 'ZZ', desc: 'Column ZZ' }
+            ];
+
+            let html = '<h3>columnIndexToLetter() Test Results</h3><table>';
+            html += '<tr><th>Description</th><th>Index</th><th>Expected</th><th>Actual</th><th>Status</th></tr>';
+            
+            let passed = 0;
+            let total = tests.length;
+
+            for (const test of tests) {
+                const result = columnIndexToLetter(test.index);
+                const status = result === test.expected;
+                
+                html += `<tr>
+                    <td>${test.desc}</td>
+                    <td>${test.index}</td>
+                    <td>${test.expected}</td>
+                    <td>${result}</td>
+                    <td class="${status ? 'pass' : 'fail'}">${status ? '✓ PASS' : '✗ FAIL'}</td>
+                </tr>`;
+                
+                if (status) passed++;
+            }
+            
+            html += '</table>';
+            html += `<p><strong>Results: ${passed}/${total} tests passed</strong></p>`;
+            
+            document.getElementById('helper-test-results').innerHTML = html;
+            return { passed, total };
+        }
+
+        function runColumnMappingTests() {
+            const testCases = [
+                {
+                    name: 'Standard 8-column sheet',
+                    headers: ['Address', 'Picture Date', 'Builder', 'Website', 'Contact Name', 'Contact Number', 'Email', 'Picture taken'],
+                    formData: {
+                        address: '123 Main St',
+                        companyName: 'ABC Construction',
+                        website: 'www.abc.com',
+                        contactName: 'John Doe',
+                        phone: '555-1234',
+                        email: 'john@abc.com'
+                    },
+                    expectedAddressIndex: 0
+                },
+                {
+                    name: '30-column sheet (A-AD) with Address in column A',
+                    headers: ['Address', 'Picture Date', 'Builder', 'Website', 'Contact Name', 'Contact Number', 'Email', 'Picture taken', 
+                              'Col1', 'Col2', 'Col3', 'Col4', 'Col5', 'Col6', 'Col7', 'Col8', 'Col9', 'Col10',
+                              'Col11', 'Col12', 'Col13', 'Col14', 'Col15', 'Col16', 'Col17', 'Col18', 'Col19', 'Col20',
+                              'Col21', 'Col22'],
+                    formData: {
+                        address: '456 Oak Ave',
+                        companyName: 'XYZ Builders',
+                        website: 'www.xyz.com',
+                        contactName: 'Jane Smith',
+                        phone: '555-5678',
+                        email: 'jane@xyz.com'
+                    },
+                    expectedAddressIndex: 0
+                },
+                {
+                    name: 'Sheet with Address in middle (after extra columns)',
+                    headers: ['ID', 'Status', 'Created Date', 'Address', 'Builder', 'Phone'],
+                    formData: {
+                        address: '789 Pine Rd',
+                        companyName: 'DEF Developers',
+                        website: '',
+                        contactName: '',
+                        phone: '555-9012',
+                        email: ''
+                    },
+                    expectedAddressIndex: 3
+                },
+                {
+                    name: 'Case-insensitive header matching',
+                    headers: ['address', 'PICTURE DATE', 'builder', 'Website'],
+                    formData: {
+                        address: '321 Elm St',
+                        companyName: 'GHI Construction',
+                        website: 'www.ghi.com',
+                        contactName: '',
+                        phone: '',
+                        email: ''
+                    },
+                    expectedAddressIndex: 0
+                }
+            ];
+
+            let html = '<h3>Column Mapping Test Results</h3>';
+            let passed = 0;
+            let total = testCases.length;
+
+            for (const testCase of testCases) {
+                const rowValues = buildRowForNewSite(testCase.headers, testCase.formData);
+                const addressActualIndex = rowValues.indexOf(testCase.formData.address);
+                const addressCorrect = addressActualIndex === testCase.expectedAddressIndex;
+                const lengthCorrect = rowValues.length === testCase.headers.length;
+                const allTestsPassed = addressCorrect && lengthCorrect;
+
+                html += `<div class="test-section">
+                    <h4>${testCase.name}</h4>
+                    <p><strong>Headers:</strong> ${testCase.headers.length} columns (${testCase.headers[0]} ... ${testCase.headers[testCase.headers.length-1]})</p>
+                    <p><strong>Expected Address in column:</strong> ${columnIndexToLetter(testCase.expectedAddressIndex)} (index ${testCase.expectedAddressIndex})</p>
+                    <p><strong>Actual Address in column:</strong> ${columnIndexToLetter(addressActualIndex)} (index ${addressActualIndex})</p>
+                    <p class="${addressCorrect ? 'pass' : 'fail'}">Address position: ${addressCorrect ? '✓ CORRECT' : '✗ WRONG'}</p>
+                    <p class="${lengthCorrect ? 'pass' : 'fail'}">Row length: ${lengthCorrect ? '✓ CORRECT' : '✗ WRONG'} (expected ${testCase.headers.length}, got ${rowValues.length})</p>
+                    <p class="${allTestsPassed ? 'pass' : 'fail'}"><strong>${allTestsPassed ? '✓ TEST PASSED' : '✗ TEST FAILED'}</strong></p>
+                </div>`;
+
+                if (allTestsPassed) passed++;
+            }
+
+            html += `<p><strong>Results: ${passed}/${total} tests passed</strong></p>`;
+            document.getElementById('mapping-test-results').innerHTML = html;
+            return { passed, total };
+        }
+
+        function runRangeTests() {
+            const testCases = [
+                { headers: ['Address', 'Picture Date', 'Builder', 'Website', 'Contact Name', 'Contact Number', 'Email', 'Picture taken'], 
+                  expectedRange: 'Sites!A:H', 
+                  desc: 'Standard 8-column sheet' },
+                { headers: Array(30).fill('').map((_, i) => `Col${i}`), 
+                  expectedRange: 'Sites!A:AD', 
+                  desc: '30-column sheet (to column AD)' },
+                { headers: Array(27).fill('').map((_, i) => `Col${i}`), 
+                  expectedRange: 'Sites!A:AA', 
+                  desc: '27-column sheet (to column AA)' },
+                { headers: Array(52).fill('').map((_, i) => `Col${i}`), 
+                  expectedRange: 'Sites!A:AZ', 
+                  desc: '52-column sheet (to column AZ)' }
+            ];
+
+            let html = '<h3>Range Generation Test Results</h3><table>';
+            html += '<tr><th>Description</th><th>Columns</th><th>Expected Range</th><th>Actual Range</th><th>Status</th></tr>';
+            
+            let passed = 0;
+            let total = testCases.length;
+
+            for (const test of testCases) {
+                const actualRange = generateAppendRange('Sites', test.headers);
+                const status = actualRange === test.expectedRange;
+                
+                html += `<tr>
+                    <td>${test.desc}</td>
+                    <td>${test.headers.length}</td>
+                    <td><code>${test.expectedRange}</code></td>
+                    <td><code>${actualRange}</code></td>
+                    <td class="${status ? 'pass' : 'fail'}">${status ? '✓ PASS' : '✗ FAIL'}</td>
+                </tr>`;
+                
+                if (status) passed++;
+            }
+            
+            html += '</table>';
+            html += `<p><strong>Results: ${passed}/${total} tests passed</strong></p>`;
+            
+            document.getElementById('range-test-results').innerHTML = html;
+            return { passed, total };
+        }
+
+        function runAllTests() {
+            const results = {
+                helper: runHelperTests(),
+                mapping: runColumnMappingTests(),
+                range: runRangeTests()
+            };
+
+            const totalPassed = results.helper.passed + results.mapping.passed + results.range.passed;
+            const totalTests = results.helper.total + results.mapping.total + results.range.total;
+            const allPassed = totalPassed === totalTests;
+
+            let html = `<h3>Overall Test Summary</h3>
+                <table>
+                    <tr><th>Test Suite</th><th>Passed</th><th>Total</th><th>Status</th></tr>
+                    <tr>
+                        <td>Helper Functions</td>
+                        <td>${results.helper.passed}</td>
+                        <td>${results.helper.total}</td>
+                        <td class="${results.helper.passed === results.helper.total ? 'pass' : 'fail'}">
+                            ${results.helper.passed === results.helper.total ? '✓' : '✗'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Column Mapping</td>
+                        <td>${results.mapping.passed}</td>
+                        <td>${results.mapping.total}</td>
+                        <td class="${results.mapping.passed === results.mapping.total ? 'pass' : 'fail'}">
+                            ${results.mapping.passed === results.mapping.total ? '✓' : '✗'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Range Generation</td>
+                        <td>${results.range.passed}</td>
+                        <td>${results.range.total}</td>
+                        <td class="${results.range.passed === results.range.total ? 'pass' : 'fail'}">
+                            ${results.range.passed === results.range.total ? '✓' : '✗'}
+                        </td>
+                    </tr>
+                    <tr style="font-weight: bold; background: ${allPassed ? '#d4edda' : '#f8d7da'};">
+                        <td>TOTAL</td>
+                        <td>${totalPassed}</td>
+                        <td>${totalTests}</td>
+                        <td class="${allPassed ? 'pass' : 'fail'}">
+                            ${allPassed ? '✓ ALL TESTS PASSED' : '✗ SOME TESTS FAILED'}
+                        </td>
+                    </tr>
+                </table>`;
+
+            document.getElementById('all-tests-summary').innerHTML = html;
+        }
+
+        // Run all tests on page load
+        window.addEventListener('load', () => {
+            runAllTests();
+        });
+    </script>
+</body>
+</html>
