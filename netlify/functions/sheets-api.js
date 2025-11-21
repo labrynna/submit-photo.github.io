@@ -44,8 +44,24 @@ exports.handler = async (event, context) => {
     
     // Add subject for domain-wide delegation if impersonation is configured
     if (GOOGLE_IMPERSONATE_USER_EMAIL) {
+      // Validate email format to prevent injection attacks
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(GOOGLE_IMPERSONATE_USER_EMAIL)) {
+        console.error('Invalid GOOGLE_IMPERSONATE_USER_EMAIL format');
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ 
+            error: 'Server configuration error',
+            message: 'Invalid impersonation user email format. Please check GOOGLE_IMPERSONATE_USER_EMAIL environment variable.'
+          })
+        };
+      }
+      
       credentials.subject = GOOGLE_IMPERSONATE_USER_EMAIL;
-      console.log(`Using domain-wide delegation to impersonate: ${GOOGLE_IMPERSONATE_USER_EMAIL}`);
+      // Log with redacted email for security (show only domain)
+      const emailParts = GOOGLE_IMPERSONATE_USER_EMAIL.split('@');
+      const redactedEmail = `***@${emailParts[1]}`;
+      console.log(`Using domain-wide delegation to impersonate: ${redactedEmail}`);
     }
     
     const auth = new GoogleAuth({
