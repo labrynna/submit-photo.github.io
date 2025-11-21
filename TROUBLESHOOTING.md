@@ -166,30 +166,43 @@ This guide helps you resolve common errors when using the Construction Site Phot
 
 ### "Failed to upload photo to Google Drive: Service Accounts do not have storage quota"
 
-**Cause:** Service accounts don't have storage quota. The application is attempting to upload files to the service account's Drive root, which has no storage.
+**Cause:** As of April 2025, Google changed the policy for service accounts - they no longer have their own storage quota. The application must use a shared folder from a personal Google Drive account to leverage that account's storage quota.
 
-**Solutions:**
+**Solution (Required as of April 2025):**
+
+This issue has been **fixed in the latest version** of the code. The application now uses the `supportsAllDrives=true` parameter in all Google Drive API calls, which ensures that files are uploaded using the storage quota of the personal Gmail account that owns the shared folder, not the service account's quota.
+
+**Setup Requirements:**
 1. Set up a folder in your regular Google Drive
 2. Share that folder with your service account email (Editor permission)
 3. Get the folder ID from the Drive URL (e.g., `https://drive.google.com/drive/folders/FOLDER_ID_HERE`)
 4. Add `GOOGLE_DRIVE_FOLDER_ID` environment variable in Netlify with that folder ID
-5. Redeploy your application
+5. Redeploy your application with the latest code
 
 **Step-by-step guide:**
-1. Open your Google Drive (regular user account)
+1. Open your Google Drive (regular user account, NOT the service account)
 2. Create a new folder (e.g., "Photo Uploads")
 3. Right-click the folder → Share
 4. Add your service account email (from GOOGLE_SERVICE_ACCOUNT_EMAIL)
 5. Grant "Editor" permission
-6. Open the folder in your browser
-7. Copy the folder ID from the URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
-8. In Netlify: Site Settings → Build & deploy → Environment
-9. Add new variable: `GOOGLE_DRIVE_FOLDER_ID` = `FOLDER_ID_HERE`
-10. Save and trigger a new deployment
+6. Click "Send" to share the folder
+7. Open the folder in your browser
+8. Copy the folder ID from the URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+9. In Netlify: Site Settings → Build & deploy → Environment
+10. Add new variable: `GOOGLE_DRIVE_FOLDER_ID` = `FOLDER_ID_HERE`
+11. Save and trigger a new deployment
+
+**Technical Details:**
+
+The fix adds these parameters to all Google Drive API calls:
+- `supportsAllDrives=true` - Enables support for shared drives and folders
+- `includeItemsFromAllDrives=true` - Includes items from shared folders in search results
+
+These parameters ensure that when the service account creates folders or uploads files, it uses the storage quota of the owner of the shared folder (your personal Gmail account) rather than attempting to use the service account's own quota (which no longer exists).
 
 See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for complete instructions.
 
-**Note:** Even though the photo upload fails, your data will still be saved to Google Sheets. The application is designed to continue working even if Drive upload fails.
+**Note:** Even if photo upload fails for other reasons, your data will still be saved to Google Sheets. The application is designed to continue working even if Drive upload fails.
 
 ---
 
