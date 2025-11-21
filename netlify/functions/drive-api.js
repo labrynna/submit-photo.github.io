@@ -1,7 +1,7 @@
 /**
  * Netlify Function: Google Drive API proxy
  * This function uploads photos to Google Drive using Service Account authentication.
- * Saves files to the "Automation/Site Pictures" folder.
+ * Saves files directly to the folder specified by GOOGLE_DRIVE_FOLDER_ID environment variable.
  */
 
 const { GoogleAuth } = require('google-auth-library');
@@ -61,63 +61,12 @@ exports.handler = async (event, context) => {
       throw new Error('Failed to obtain access token from Service Account');
     }
 
-    // Step 1: Find or create the "Automation/Site Pictures" folder
-    const folderPath = ['Automation', 'Site Pictures'];
     // Use GOOGLE_DRIVE_FOLDER_ID if provided, otherwise use 'root'
     // This allows uploading to a folder shared with the service account
-    let parentFolderId = GOOGLE_DRIVE_FOLDER_ID || 'root';
-    
-    for (const folderName of folderPath) {
-      // Search for the folder
-      // Include supportsAllDrives=true to work with shared drives and use owner's storage quota
-      // Properly escape folder name and parent ID to prevent query injection
-      // First escape backslashes, then escape single quotes
-      const escapedFolderName = folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      const escapedParentId = parentFolderId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${escapedFolderName}' and '${escapedParentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&supportsAllDrives=true&includeItemsFromAllDrives=true`;
-      
-      const searchResponse = await fetch(searchUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken.token}`,
-        }
-      });
-      
-      if (!searchResponse.ok) {
-        throw new Error(`Failed to search for folder: ${searchResponse.statusText}`);
-      }
-      
-      const searchData = await searchResponse.json();
-      
-      if (searchData.files && searchData.files.length > 0) {
-        // Folder exists, use it
-        parentFolderId = searchData.files[0].id;
-      } else {
-        // Folder doesn't exist, create it
-        // Include supportsAllDrives=true to use owner's storage quota instead of service account quota
-        const createFolderResponse = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken.token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: folderName,
-            mimeType: 'application/vnd.google-apps.folder',
-            parents: [parentFolderId]
-          })
-        });
-        
-        if (!createFolderResponse.ok) {
-          throw new Error(`Failed to create folder: ${createFolderResponse.statusText}`);
-        }
-        
-        const folderData = await createFolderResponse.json();
-        parentFolderId = folderData.id;
-      }
-    }
+    // Pictures will be saved directly to this folder without creating subfolders
+    const parentFolderId = GOOGLE_DRIVE_FOLDER_ID || 'root';
 
-    // Step 2: Upload the file to the folder
+    // Upload the file to the folder
     // Convert base64 to buffer
     const fileBuffer = Buffer.from(fileData, 'base64');
     
