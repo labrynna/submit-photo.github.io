@@ -19,6 +19,7 @@ exports.handler = async (event, context) => {
   const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
   const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID; // Optional: Folder ID to upload to
+  const GOOGLE_IMPERSONATE_USER_EMAIL = process.env.GOOGLE_IMPERSONATE_USER_EMAIL; // Optional: User email to impersonate for domain-wide delegation
   
   // Check for required environment variables
   if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
@@ -45,13 +46,24 @@ exports.handler = async (event, context) => {
     }
 
     // Initialize Google Auth with Service Account
-    const auth = new GoogleAuth({
+    // If GOOGLE_IMPERSONATE_USER_EMAIL is set, use domain-wide delegation to impersonate that user
+    const authConfig = {
       credentials: {
         client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
       },
       scopes: ['https://www.googleapis.com/auth/drive.file'],
-    });
+    };
+    
+    // Add subject for domain-wide delegation if impersonation is configured
+    if (GOOGLE_IMPERSONATE_USER_EMAIL) {
+      authConfig.clientOptions = {
+        subject: GOOGLE_IMPERSONATE_USER_EMAIL
+      };
+      console.log(`Using domain-wide delegation to impersonate: ${GOOGLE_IMPERSONATE_USER_EMAIL}`);
+    }
+    
+    const auth = new GoogleAuth(authConfig);
 
     // Get access token
     const client = await auth.getClient();

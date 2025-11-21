@@ -18,6 +18,7 @@ exports.handler = async (event, context) => {
   // Get credentials from environment variables
   const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+  const GOOGLE_IMPERSONATE_USER_EMAIL = process.env.GOOGLE_IMPERSONATE_USER_EMAIL; // Optional: User email to impersonate for domain-wide delegation
   const SHEET_ID = process.env.SHEET_ID;
   const SHEET_NAME = process.env.SHEET_NAME || 'Sites';
   
@@ -35,7 +36,8 @@ exports.handler = async (event, context) => {
 
   try {
     // Initialize Google Auth with Service Account
-    const auth = new GoogleAuth({
+    // If GOOGLE_IMPERSONATE_USER_EMAIL is set, use domain-wide delegation to impersonate that user
+    const authConfig = {
       credentials: {
         client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
@@ -44,7 +46,17 @@ exports.handler = async (event, context) => {
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive.file'
       ],
-    });
+    };
+    
+    // Add subject for domain-wide delegation if impersonation is configured
+    if (GOOGLE_IMPERSONATE_USER_EMAIL) {
+      authConfig.clientOptions = {
+        subject: GOOGLE_IMPERSONATE_USER_EMAIL
+      };
+      console.log(`Using domain-wide delegation to impersonate: ${GOOGLE_IMPERSONATE_USER_EMAIL}`);
+    }
+    
+    const auth = new GoogleAuth(authConfig);
 
     // Get access token
     const client = await auth.getClient();
