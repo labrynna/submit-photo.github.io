@@ -215,6 +215,132 @@ If you're using Google Workspace (not personal Gmail) and still experiencing iss
 
 ---
 
+### "Failed to upload photo to Google Drive: OAuth credentials not configured"
+
+**Cause:** The OAuth 2.0 credentials required for Google Drive upload are missing or incorrectly configured in Netlify environment variables.
+
+**Error Message Example:**
+```
+Warning: Failed to upload photo to Google Drive: OAuth credentials not configured. 
+Please set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN 
+environment variables. See OAUTH_SETUP_GUIDE.md for instructions.
+```
+
+**Solutions:**
+
+1. **Verify all three OAuth environment variables are set in Netlify:**
+   - Go to Netlify Dashboard → Your Site → Site settings → Environment variables
+   - Check that ALL THREE variables exist:
+     - `GOOGLE_OAUTH_CLIENT_ID`
+     - `GOOGLE_OAUTH_CLIENT_SECRET`
+     - `GOOGLE_OAUTH_REFRESH_TOKEN`
+   - If any are missing, follow [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md) to set them up
+
+2. **Check for whitespace or formatting issues:**
+   - Environment variables should NOT have extra spaces before or after the value
+   - Client ID should look like: `123456789-abc.apps.googleusercontent.com`
+   - Client Secret should look like: `GOCSPX-abcdefghijk`
+   - Refresh Token should look like: `1//0gPAbcDefGhiJkL...` (very long string)
+
+3. **Check Netlify Function Logs for details:**
+   - Go to Netlify Dashboard → Functions → drive-api
+   - Look at recent invocations for error details
+   - The logs will show which specific variable is missing:
+     - `GOOGLE_OAUTH_CLIENT_ID: NOT SET` or `SET`
+     - `GOOGLE_OAUTH_CLIENT_SECRET: NOT SET` or `SET`
+     - `GOOGLE_OAUTH_REFRESH_TOKEN: NOT SET` or `SET`
+
+4. **Redeploy after adding environment variables:**
+   - After adding or updating environment variables in Netlify
+   - You MUST trigger a new deployment for changes to take effect
+   - Go to Netlify Dashboard → Deploys → Trigger deploy → Deploy site
+
+5. **Verify OAuth credentials are valid:**
+   - Test your refresh token using [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/)
+   - Click the gear icon, check "Use your own OAuth credentials"
+   - Enter your Client ID and Client Secret
+   - Paste your Refresh Token in the "Refresh token" field
+   - Click "Refresh access token"
+   - If it fails, you need to generate a new refresh token (follow Step 2 in OAUTH_SETUP_GUIDE.md)
+
+6. **Common setup mistakes:**
+   - ❌ Only setting 1 or 2 of the 3 required variables
+   - ❌ Copying the Authorization Code instead of the Refresh Token
+   - ❌ Using the Access Token instead of the Refresh Token (access tokens expire quickly)
+   - ❌ Not completing the authorization flow in OAuth Playground
+   - ❌ Forgetting to click "Exchange authorization code for tokens" in OAuth Playground
+   - ❌ Not redeploying after setting environment variables
+
+**Quick Verification Checklist:**
+```
+☐ GOOGLE_OAUTH_CLIENT_ID is set in Netlify (not empty)
+☐ GOOGLE_OAUTH_CLIENT_SECRET is set in Netlify (not empty)
+☐ GOOGLE_OAUTH_REFRESH_TOKEN is set in Netlify (not empty)
+☐ Values have no extra spaces at beginning or end
+☐ Triggered a new deployment after setting variables
+☐ Refresh token was obtained from OAuth Playground (Step 2 in OAUTH_SETUP_GUIDE.md)
+☐ All three variables are in the SAME Netlify site
+```
+
+**Note:** OAuth is specifically for Google Drive uploads. If Drive upload fails, your data will still be saved to Google Sheets (which uses Service Account authentication separately).
+
+**See Also:**
+- Complete setup guide: [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md)
+- Quick start guide: [OAUTH_QUICK_START.md](OAUTH_QUICK_START.md)
+
+---
+
+### "Failed to obtain access token from refresh token"
+
+**Cause:** The OAuth refresh token is invalid, expired, or the Client ID/Secret don't match the token.
+
+**Error Message Example:**
+```
+Failed to obtain access token from refresh token. This may indicate: 
+1) Invalid refresh token format, 2) Expired or revoked refresh token, 
+3) Incorrect Client ID or Secret.
+```
+
+**Solutions:**
+
+1. **Generate a new refresh token:**
+   - The most common solution is to get a fresh refresh token
+   - Follow Step 2 in [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md)
+   - Use [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/)
+   - Make sure to:
+     - Configure with your Client ID and Secret (gear icon)
+     - Authorize with `https://www.googleapis.com/auth/drive.file` scope
+     - Click "Exchange authorization code for tokens"
+     - Copy the **refresh_token** (not the access_token)
+   - Update `GOOGLE_OAUTH_REFRESH_TOKEN` in Netlify
+   - Redeploy
+
+2. **Verify Client ID and Secret match:**
+   - The refresh token is tied to specific OAuth credentials
+   - If you created new OAuth credentials, you need a new refresh token
+   - The Client ID and Secret must be from the SAME OAuth client that was used to generate the refresh token
+
+3. **Check if access was revoked:**
+   - Go to [Google Account - Third-party apps with account access](https://myaccount.google.com/permissions)
+   - Look for your app (the name from OAuth consent screen)
+   - If it's not listed or shows "Removed", you need to reauthorize:
+     - Generate a new refresh token following Step 2 in OAUTH_SETUP_GUIDE.md
+
+4. **Verify the refresh token format:**
+   - Refresh tokens typically start with `1//`
+   - They are very long (100+ characters)
+   - Ensure you copied the entire token
+   - Check for no extra spaces or line breaks
+
+5. **Check OAuth consent screen configuration:**
+   - Go to [Google Cloud Console - OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+   - Verify your email is listed as a test user (for External apps)
+   - Ensure the app status is not "Suspended"
+
+**See Also:** [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md) for complete setup instructions
+
+---
+
 ### "Failed to upload photo to Google Drive: Permission denied" or "Access denied"
 
 **Cause:** The service account doesn't have proper access to the Google Drive folder.
