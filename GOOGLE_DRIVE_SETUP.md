@@ -2,6 +2,17 @@
 
 This guide explains how to configure the application to automatically upload photos to Google Drive under the "Automation/Site Pictures" folder.
 
+## Important: April 2025 Service Account Storage Change
+
+**As of April 2025, Google changed the policy for service accounts** - they no longer have their own storage quota. This means files cannot be uploaded to the service account's Drive directly.
+
+**Solution:** The application has been updated to use the `supportsAllDrives=true` parameter in all Google Drive API calls. This ensures that when you share a folder from your personal Google Drive with the service account, files uploaded by the service account will use **your personal account's storage quota**, not the service account's (which no longer exists).
+
+**Key Requirements:**
+1. You MUST share a folder from your personal Google Drive with the service account
+2. You MUST set the `GOOGLE_DRIVE_FOLDER_ID` environment variable to point to that shared folder
+3. The service account will then use your personal account's storage quota when uploading files
+
 ## Overview
 
 When users click "Save" after uploading a construction site photo, the application will:
@@ -26,14 +37,14 @@ The application has been updated to use the existing `GOOGLE_SERVICE_ACCOUNT_EMA
 4. Search for **"Google Drive API"**
 5. Click on it and click **"Enable"**
 
-#### 2. Set Up a Folder in Your Google Drive
+#### 2. Set Up a Folder in Your Google Drive (REQUIRED)
 
-**Important:** Service accounts don't have storage quota, so you need to upload to a folder in your regular Google Drive that you've shared with the service account.
+**Critical:** As of April 2025, service accounts no longer have storage quota. You MUST upload to a folder in your regular Google Drive that you've shared with the service account. The service account will use your personal account's storage quota.
 
 **Step-by-step:**
 
 1. **Create a folder in your Google Drive**
-   - Open your Google Drive (the regular user account, not the service account)
+   - Open your Google Drive (the regular user account, NOT the service account)
    - Create a folder (e.g., name it "Photo Uploads" or any name you prefer)
    - You can create this folder anywhere in your Drive
 
@@ -128,16 +139,20 @@ After deploying the updated application:
 
 ## Troubleshooting
 
-### Error: "Failed to upload photo to Google Drive"
+### Error: "Failed to upload photo to Google Drive: Service Accounts do not have storage quota"
 
 **Possible causes and solutions:**
 
-1. **Service account has no storage quota (most common)**
-   - Service accounts don't have storage quota
-   - You must specify a folder in your regular Google Drive
-   - Add `GOOGLE_DRIVE_FOLDER_ID` environment variable in Netlify with the folder ID from your Drive
-   - Share that folder with the service account email with Editor permission
-   - See "Set Up a Folder in Your Google Drive" section above
+1. **Service account has no storage quota (April 2025 policy change)**
+   - **Cause**: As of April 2025, Google removed storage quota from service accounts
+   - **Solution**: The application code has been updated to use `supportsAllDrives=true` parameter
+   - **Requirements**:
+     - You MUST specify a folder in your regular Google Drive
+     - Add `GOOGLE_DRIVE_FOLDER_ID` environment variable in Netlify with the folder ID from your Drive
+     - Share that folder with the service account email with Editor permission
+     - Redeploy your application with the latest code
+     - The service account will then use your personal account's storage quota
+   - See "Set Up a Folder in Your Google Drive" section above for detailed steps
 
 2. **Google Drive API not enabled**
    - Go to Google Cloud Console → APIs & Services → Library
@@ -223,12 +238,48 @@ Use this checklist to ensure Google Drive photo uploads are working:
 ☐ Added GOOGLE_DRIVE_FOLDER_ID environment variable in Netlify
 ☐ Shared the folder with service account email (Editor permission)
 ☐ Service account credentials (GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY) are set in Netlify
-☐ Deployed the updated application code to Netlify
+☐ Deployed the updated application code to Netlify (includes supportsAllDrives fix)
 ☐ Tested uploading a photo and verified it appears in the correct folder in your Drive
 ☐ Checked that the filename format is DATE_ADDRESS
 ☐ Verified photos are in "Automation/Site Pictures" folder inside your specified folder
 ☐ Confirmed Google Sheets data save still works correctly
 ```
+
+## Technical Details: How the Fix Works
+
+### The April 2025 Service Account Change
+
+In April 2025, Google changed the policy for service accounts, removing their storage quota entirely. This means:
+
+- **Before April 2025**: Service accounts had their own limited storage quota
+- **After April 2025**: Service accounts have NO storage quota at all
+
+### The Solution: supportsAllDrives Parameter
+
+The application code has been updated to include the `supportsAllDrives=true` parameter in all Google Drive API calls:
+
+1. **Folder Search**: `supportsAllDrives=true&includeItemsFromAllDrives=true`
+   - Allows the service account to search for folders in shared drives and folders
+   - Ensures folders created in your personal Drive are visible to the service account
+
+2. **Folder Creation**: `supportsAllDrives=true`
+   - When creating folders, uses the storage quota of the folder owner (your personal account)
+   - Not the service account's quota (which doesn't exist)
+
+3. **File Upload**: `supportsAllDrives=true`
+   - When uploading files, uses the storage quota of the folder owner (your personal account)
+   - Ensures files are stored using your personal account's storage, not the service account's
+
+### How Storage Quota Works
+
+When you share a folder from your personal Google Drive with the service account:
+
+1. **Ownership**: You (your personal account) remain the owner of the folder
+2. **Storage Quota**: Files uploaded by the service account use YOUR storage quota
+3. **Access**: The service account has Editor permission to create folders and upload files
+4. **Result**: Photos are stored in your personal Drive, using your storage, accessible to you
+
+This is exactly what you need - the service account acts as an automated agent that uploads files on your behalf, but the files are stored in your Drive using your storage quota.
 
 ## Additional Resources
 
