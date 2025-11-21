@@ -252,7 +252,7 @@ Use this checklist to ensure Google Drive photo uploads are working:
 In April 2025, Google changed the policy for service accounts, removing their storage quota entirely. This means:
 
 - **Before April 2025**: Service accounts had their own limited storage quota
-- **After April 2025**: Service accounts have NO storage quota at all
+- **After April 2025**: Service accounts have no storage quota at all
 
 ### The Solution: supportsAllDrives Parameter
 
