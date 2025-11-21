@@ -69,7 +69,6 @@ exports.handler = async (event, context) => {
     // This uploads to your personal Google Drive
     const parentFolderId = GOOGLE_DRIVE_FOLDER_ID || 'root';
 
-    // Upload the file to the folder
     // Create metadata
     const metadata = {
       name: fileName,
@@ -92,7 +91,8 @@ exports.handler = async (event, context) => {
       close_delim;
     
     // Upload file to Google Drive
-    const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    // Include supportsAllDrives=true for compatibility with shared drives
+    const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true';
     
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
