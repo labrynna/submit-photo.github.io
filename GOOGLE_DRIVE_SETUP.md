@@ -177,15 +177,9 @@ After deploying the updated application:
    - Add `GOOGLE_IMPERSONATE_USER_EMAIL` environment variable with a user email from your domain
    - This can resolve many permission and access issues in Google Workspace environments
 
-5. **Quota exceeded**
+6. **Quota exceeded**
    - Check your Google Cloud project quotas
    - Google Drive API has daily limits that may need to be increased
-
-6. **For Google Workspace users: Consider domain-wide delegation**
-   - If you're using Google Workspace and experiencing persistent issues
-   - Domain-wide delegation allows the service account to act as a specific user
-   - See [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md) for setup instructions
-   - This can help resolve complex permission scenarios in enterprise environments
 
 ### Warning: "Failed to upload photo to Google Drive. Data will still be saved to Sheets."
 
