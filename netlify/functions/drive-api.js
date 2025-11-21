@@ -71,8 +71,9 @@ exports.handler = async (event, context) => {
       // Search for the folder
       // Include supportsAllDrives=true to work with shared drives and use owner's storage quota
       // Properly escape folder name and parent ID to prevent query injection
-      const escapedFolderName = folderName.replace(/'/g, "\\'");
-      const escapedParentId = parentFolderId.replace(/'/g, "\\'");
+      // First escape backslashes, then escape single quotes
+      const escapedFolderName = folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const escapedParentId = parentFolderId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${escapedFolderName}' and '${escapedParentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&supportsAllDrives=true&includeItemsFromAllDrives=true`;
       
       const searchResponse = await fetch(searchUrl, {
