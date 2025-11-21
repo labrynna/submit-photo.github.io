@@ -82,26 +82,55 @@ Example: -----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n
 
 ---
 
-### 8. GOOGLE_DRIVE_FOLDER_ID ⭕ OPTIONAL
+### 8. GOOGLE_OAUTH_CLIENT_ID ✅ REQUIRED (for Google Drive)
+```
+Variable name: GOOGLE_OAUTH_CLIENT_ID
+Value: Your OAuth 2.0 Client ID
+Example: 123456789-abc.apps.googleusercontent.com
+```
+**Where to get:** From Google Cloud Console - OAuth 2.0 Client ID
+**See:** [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md)
+
+---
+
+### 9. GOOGLE_OAUTH_CLIENT_SECRET ✅ REQUIRED (for Google Drive)
+```
+Variable name: GOOGLE_OAUTH_CLIENT_SECRET
+Value: Your OAuth 2.0 Client Secret
+Example: GOCSPX-abcdefghijklmnop
+```
+**Where to get:** From Google Cloud Console - OAuth 2.0 Client ID
+**See:** [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md)
+
+---
+
+### 10. GOOGLE_OAUTH_REFRESH_TOKEN ✅ REQUIRED (for Google Drive)
+```
+Variable name: GOOGLE_OAUTH_REFRESH_TOKEN
+Value: Your OAuth 2.0 Refresh Token (obtained once via OAuth Playground)
+Example: 1//0gPAbcDefGhiJkL...
+```
+**Where to get:** From Google OAuth 2.0 Playground (one-time setup)
+**See:** [OAUTH_SETUP_GUIDE.md](OAUTH_SETUP_GUIDE.md)
+
+---
+
+### 11. GOOGLE_DRIVE_FOLDER_ID ⭕ OPTIONAL
 ```
 Variable name: GOOGLE_DRIVE_FOLDER_ID
 Value: Google Drive folder ID where photos should be uploaded
 Example: 1A2B3C4D5E6F7G8H9I0J_KLMNOPQRSTUVWXYZabcdef
 ```
 **Where to get:** From your Google Drive folder URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
-**See:** [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md)
+**Note:** If not set, photos will upload to the root of your Google Drive
 
 ---
 
-### 9. GOOGLE_IMPERSONATE_USER_EMAIL ⭕ OPTIONAL (Google Workspace Only)
+### ~~12. GOOGLE_IMPERSONATE_USER_EMAIL~~ ⚠️ DEPRECATED
 ```
-Variable name: GOOGLE_IMPERSONATE_USER_EMAIL
-Value: Email of the Google Workspace user to impersonate
-Example: admin@yourdomain.com
+This variable is no longer needed. Google Drive now uses OAuth 2.0 instead.
+You can remove this variable if you added it previously.
 ```
-**When to use:** Only needed if you're using Google Workspace and want to enable domain-wide delegation for the service account to impersonate a specific user
-**See:** [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md)
-**Note:** This is only for Google Workspace accounts, not personal Gmail accounts
 
 ---
 
@@ -117,8 +146,10 @@ Copy this checklist and check off as you set up each variable:
 ☐ SHEET_NAME set in Netlify (optional)
 ☐ GOOGLE_SERVICE_ACCOUNT_EMAIL set in Netlify
 ☐ GOOGLE_PRIVATE_KEY set in Netlify
-☐ GOOGLE_DRIVE_FOLDER_ID set in Netlify (optional, recommended)
-☐ GOOGLE_IMPERSONATE_USER_EMAIL set in Netlify (optional, Google Workspace only)
+☐ GOOGLE_OAUTH_CLIENT_ID set in Netlify (for Drive)
+☐ GOOGLE_OAUTH_CLIENT_SECRET set in Netlify (for Drive)
+☐ GOOGLE_OAUTH_REFRESH_TOKEN set in Netlify (for Drive)
+☐ GOOGLE_DRIVE_FOLDER_ID set in Netlify (optional)
 ☐ Triggered new deployment
 ☐ Verified build succeeded
 ☐ Tested application works
@@ -139,10 +170,14 @@ SHEET_ID=your_actual_sheet_id_here
 GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
 GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nYourPrivateKeyHere\n-----END PRIVATE KEY-----\n
 
+# Required for Google Drive (OAuth 2.0)
+GOOGLE_OAUTH_CLIENT_ID=123456789-abc.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=GOCSPX-abcdefghijk
+GOOGLE_OAUTH_REFRESH_TOKEN=1//0gPAbcDefGhiJkL...
+
 # Optional Variables
 SHEET_NAME=Sites
 GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id_here
-GOOGLE_IMPERSONATE_USER_EMAIL=admin@yourdomain.com
 ```
 
 ---
