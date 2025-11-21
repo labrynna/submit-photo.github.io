@@ -69,7 +69,8 @@ exports.handler = async (event, context) => {
     
     for (const folderName of folderPath) {
       // Search for the folder
-      const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${folderName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+      // Include supportsAllDrives=true to work with shared drives and use owner's storage quota
+      const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${folderName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&supportsAllDrives=true&includeItemsFromAllDrives=true`;
       
       const searchResponse = await fetch(searchUrl, {
         method: 'GET',
@@ -89,7 +90,8 @@ exports.handler = async (event, context) => {
         parentFolderId = searchData.files[0].id;
       } else {
         // Folder doesn't exist, create it
-        const createFolderResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+        // Include supportsAllDrives=true to use owner's storage quota instead of service account quota
+        const createFolderResponse = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken.token}`,
@@ -137,7 +139,8 @@ exports.handler = async (event, context) => {
       close_delim;
     
     // Upload file
-    const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    // Include supportsAllDrives=true to use owner's storage quota instead of service account quota
+    const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true';
     
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
