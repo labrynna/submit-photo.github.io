@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
       credentials.subject = GOOGLE_IMPERSONATE_USER_EMAIL;
       // Log with redacted email for security (show only domain)
       const emailParts = GOOGLE_IMPERSONATE_USER_EMAIL.split('@');
-      const redactedEmail = `***@${emailParts[1]}`;
+      const redactedEmail = emailParts.length === 2 ? `***@${emailParts[1]}` : '***@***';
       console.log(`Using domain-wide delegation to impersonate: ${redactedEmail}`);
     }
     
