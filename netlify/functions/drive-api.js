@@ -47,23 +47,21 @@ exports.handler = async (event, context) => {
 
     // Initialize Google Auth with Service Account
     // If GOOGLE_IMPERSONATE_USER_EMAIL is set, use domain-wide delegation to impersonate that user
-    const authConfig = {
-      credentials: {
-        client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
-      },
-      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    const credentials = {
+      client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
     };
     
     // Add subject for domain-wide delegation if impersonation is configured
     if (GOOGLE_IMPERSONATE_USER_EMAIL) {
-      authConfig.clientOptions = {
-        subject: GOOGLE_IMPERSONATE_USER_EMAIL
-      };
+      credentials.subject = GOOGLE_IMPERSONATE_USER_EMAIL;
       console.log(`Using domain-wide delegation to impersonate: ${GOOGLE_IMPERSONATE_USER_EMAIL}`);
     }
     
-    const auth = new GoogleAuth(authConfig);
+    const auth = new GoogleAuth({
+      credentials: credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    });
 
     // Get access token
     const client = await auth.getClient();
