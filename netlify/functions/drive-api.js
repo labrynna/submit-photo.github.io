@@ -16,20 +16,38 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Get OAuth credentials from environment variables
-  const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
-  const GOOGLE_OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  const GOOGLE_OAUTH_REFRESH_TOKEN = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
-  const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID; // Optional: Folder ID to upload to
+  // Get OAuth credentials from environment variables and trim whitespace
+  const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID?.trim();
+  const GOOGLE_OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim();
+  const GOOGLE_OAUTH_REFRESH_TOKEN = process.env.GOOGLE_OAUTH_REFRESH_TOKEN?.trim();
+  const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID?.trim(); // Optional: Folder ID to upload to
   
-  // Check for required environment variables
-  if (!GOOGLE_OAUTH_CLIENT_ID || !GOOGLE_OAUTH_CLIENT_SECRET || !GOOGLE_OAUTH_REFRESH_TOKEN) {
-    console.error('Missing required environment variables. Required: GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REFRESH_TOKEN');
+  // Check for required environment variables and provide detailed feedback
+  const missingVars = [];
+  if (!GOOGLE_OAUTH_CLIENT_ID || GOOGLE_OAUTH_CLIENT_ID === '') {
+    missingVars.push('GOOGLE_OAUTH_CLIENT_ID');
+  }
+  if (!GOOGLE_OAUTH_CLIENT_SECRET || GOOGLE_OAUTH_CLIENT_SECRET === '') {
+    missingVars.push('GOOGLE_OAUTH_CLIENT_SECRET');
+  }
+  if (!GOOGLE_OAUTH_REFRESH_TOKEN || GOOGLE_OAUTH_REFRESH_TOKEN === '') {
+    missingVars.push('GOOGLE_OAUTH_REFRESH_TOKEN');
+  }
+  
+  if (missingVars.length > 0) {
+    const errorDetails = `Missing or empty environment variables: ${missingVars.join(', ')}`;
+    console.error(errorDetails);
+    console.error('Environment variable status:');
+    console.error(`  GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID ? 'set (length: ' + GOOGLE_OAUTH_CLIENT_ID.length + ')' : 'NOT SET'}`);
+    console.error(`  GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET ? 'set (length: ' + GOOGLE_OAUTH_CLIENT_SECRET.length + ')' : 'NOT SET'}`);
+    console.error(`  GOOGLE_OAUTH_REFRESH_TOKEN: ${GOOGLE_OAUTH_REFRESH_TOKEN ? 'set (length: ' + GOOGLE_OAUTH_REFRESH_TOKEN.length + ')' : 'NOT SET'}`);
+    
     return {
       statusCode: 500,
       body: JSON.stringify({ 
         error: 'Server configuration error',
-        message: 'OAuth credentials not configured. Please set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN environment variables. See OAUTH_SETUP_GUIDE.md for instructions.'
+        message: 'OAuth credentials not configured. Please set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN environment variables. See OAUTH_SETUP_GUIDE.md for instructions.',
+        details: errorDetails
       })
     };
   }
@@ -59,10 +77,18 @@ exports.handler = async (event, context) => {
     });
 
     // Get a fresh access token (automatically handles refresh)
-    const { token: accessToken } = await oauth2Client.getAccessToken();
+    let accessToken;
+    try {
+      const tokenResponse = await oauth2Client.getAccessToken();
+      accessToken = tokenResponse.token;
+    } catch (tokenError) {
+      console.error('Error obtaining access token:', tokenError);
+      console.error('Token error details:', tokenError.message);
+      throw new Error(`Failed to obtain access token from refresh token. This may indicate: 1) Invalid refresh token format, 2) Expired or revoked refresh token, 3) Incorrect Client ID or Secret. Error: ${tokenError.message}`);
+    }
     
     if (!accessToken) {
-      throw new Error('Failed to obtain access token from refresh token. Your refresh token may be invalid or expired.');
+      throw new Error('Failed to obtain access token from refresh token. The token response was empty. Your refresh token may be invalid or expired.');
     }
 
     // Use GOOGLE_DRIVE_FOLDER_ID if provided, otherwise use 'root'
