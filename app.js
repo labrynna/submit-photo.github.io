@@ -600,6 +600,24 @@ Return only valid JSON, no other text.`;
     }
 
     /**
+     * Converts a column index (0-based) to a column letter (A, B, ..., Z, AA, AB, ..., ZZ, AAA, etc.)
+     * @param {number} index - 0-based column index
+     * @returns {string} Column letter(s)
+     */
+    columnIndexToLetter(index) {
+        let letter = '';
+        let num = index + 1; // Convert to 1-based
+        
+        while (num > 0) {
+            let remainder = (num - 1) % 26;
+            letter = String.fromCharCode(65 + remainder) + letter;
+            num = Math.floor((num - 1) / 26);
+        }
+        
+        return letter;
+    }
+
+    /**
      * Gets the column index for a given column name from headers
      * @param {Array} headers - Array of column headers
      * @param {string} columnName - Name of the column to find
@@ -687,7 +705,11 @@ Return only valid JSON, no other text.`;
         
         const values = [rowValues];
 
-        const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=append&range=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
+        // Determine the column range dynamically based on number of columns
+        // This ensures data is appended to the correct columns (A through lastColumn)
+        const lastColumn = this.columnIndexToLetter(sheetData.headers.length - 1);
+        const range = `${CONFIG.SHEET_NAME}!A:${lastColumn}`;
+        const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=append&range=${encodeURIComponent(range)}`;
         
         let response;
         try {
@@ -767,7 +789,7 @@ Return only valid JSON, no other text.`;
         const values = [rowValues];
         
         // Determine the range dynamically based on number of columns
-        const lastColumn = String.fromCharCode(65 + headers.length - 1); // A=65, B=66, etc.
+        const lastColumn = this.columnIndexToLetter(headers.length - 1);
         const range = `${CONFIG.SHEET_NAME}!A${rowNumber}:${lastColumn}${rowNumber}`;
 
         const url = `${CONFIG.SHEETS_API_ENDPOINT}?action=update&updateRange=${encodeURIComponent(range)}`;
