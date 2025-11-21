@@ -38,9 +38,9 @@ exports.handler = async (event, context) => {
     const errorDetails = `Missing or empty environment variables: ${missingVars.join(', ')}`;
     console.error(errorDetails);
     console.error('Environment variable status:');
-    console.error(`  GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID ? 'set (length: ' + GOOGLE_OAUTH_CLIENT_ID.length + ')' : 'NOT SET'}`);
-    console.error(`  GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET ? 'set (length: ' + GOOGLE_OAUTH_CLIENT_SECRET.length + ')' : 'NOT SET'}`);
-    console.error(`  GOOGLE_OAUTH_REFRESH_TOKEN: ${GOOGLE_OAUTH_REFRESH_TOKEN ? 'set (length: ' + GOOGLE_OAUTH_REFRESH_TOKEN.length + ')' : 'NOT SET'}`);
+    console.error(`  GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID ? 'SET' : 'NOT SET'}`);
+    console.error(`  GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET ? 'SET' : 'NOT SET'}`);
+    console.error(`  GOOGLE_OAUTH_REFRESH_TOKEN: ${GOOGLE_OAUTH_REFRESH_TOKEN ? 'SET' : 'NOT SET'}`);
     
     return {
       statusCode: 500,
@@ -83,8 +83,8 @@ exports.handler = async (event, context) => {
       accessToken = tokenResponse.token;
     } catch (tokenError) {
       console.error('Error obtaining access token:', tokenError);
-      console.error('Token error details:', tokenError.message);
-      throw new Error(`Failed to obtain access token from refresh token. This may indicate: 1) Invalid refresh token format, 2) Expired or revoked refresh token, 3) Incorrect Client ID or Secret. Error: ${tokenError.message}`);
+      // Log detailed error server-side but don't expose details to client
+      throw new Error('Failed to obtain access token from refresh token. This may indicate an invalid refresh token, expired or revoked token, or incorrect Client ID/Secret. Please verify your OAuth credentials in Netlify environment variables.');
     }
     
     if (!accessToken) {
