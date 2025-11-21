@@ -245,10 +245,10 @@ environment variables. See OAUTH_SETUP_GUIDE.md for instructions.
 3. **Check Netlify Function Logs for details:**
    - Go to Netlify Dashboard → Functions → drive-api
    - Look at recent invocations for error details
-   - The logs will show which specific variable is missing or empty:
-     - `GOOGLE_OAUTH_CLIENT_ID: NOT SET` or `set (length: X)`
-     - `GOOGLE_OAUTH_CLIENT_SECRET: NOT SET` or `set (length: X)`
-     - `GOOGLE_OAUTH_REFRESH_TOKEN: NOT SET` or `set (length: X)`
+   - The logs will show which specific variable is missing:
+     - `GOOGLE_OAUTH_CLIENT_ID: NOT SET` or `SET`
+     - `GOOGLE_OAUTH_CLIENT_SECRET: NOT SET` or `SET`
+     - `GOOGLE_OAUTH_REFRESH_TOKEN: NOT SET` or `SET`
 
 4. **Redeploy after adding environment variables:**
    - After adding or updating environment variables in Netlify

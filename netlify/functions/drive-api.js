@@ -46,8 +46,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({ 
         error: 'Server configuration error',
-        message: 'OAuth credentials not configured. Please set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN environment variables. See OAUTH_SETUP_GUIDE.md for instructions.',
-        details: errorDetails
+        message: 'OAuth credentials not configured. Please set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN environment variables. See OAUTH_SETUP_GUIDE.md for instructions.'
       })
     };
   }
