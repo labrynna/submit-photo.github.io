@@ -204,6 +204,46 @@ See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for complete instructions.
 
 **Note:** Even if photo upload fails for other reasons, your data will still be saved to Google Sheets. The application is designed to continue working even if Drive upload fails.
 
+**Alternative Solution for Google Workspace Users:**
+
+If you're using Google Workspace (not personal Gmail) and still experiencing issues, you can enable domain-wide delegation to have the service account impersonate a specific user:
+
+1. See [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md) for complete setup instructions
+2. This requires Super Admin access to Google Workspace Admin Console
+3. Add `GOOGLE_IMPERSONATE_USER_EMAIL` environment variable in Netlify
+4. This approach makes the service account act on behalf of a specific user, using that user's permissions and storage quota
+
+---
+
+### "Failed to upload photo to Google Drive: Permission denied" or "Access denied"
+
+**Cause:** The service account doesn't have proper access to the Google Drive folder.
+
+**Solutions:**
+
+1. **Verify folder sharing:**
+   - Open the folder specified in `GOOGLE_DRIVE_FOLDER_ID` in Google Drive
+   - Click "Share" button
+   - Ensure the service account email (from `GOOGLE_SERVICE_ACCOUNT_EMAIL`) is listed
+   - Ensure it has "Editor" permission (not just "Viewer")
+   - If missing, add it with Editor permission
+
+2. **Check folder ID is correct:**
+   - Verify the `GOOGLE_DRIVE_FOLDER_ID` in Netlify matches your folder
+   - The ID should be from the URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
+   - Make sure there are no extra spaces or characters
+
+3. **For Google Workspace users:**
+   - If you're using Google Workspace, consider enabling domain-wide delegation
+   - See [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md)
+   - Set `GOOGLE_IMPERSONATE_USER_EMAIL` to a user with proper permissions
+   - This allows the service account to act as that user
+
+4. **Ensure Google Drive API is enabled:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Navigate to APIs & Services → Library
+   - Search for "Google Drive API" and ensure it's enabled
+
 ---
 
 ## General Troubleshooting Steps

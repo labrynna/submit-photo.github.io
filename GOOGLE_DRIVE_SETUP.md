@@ -167,8 +167,17 @@ After deploying the updated application:
    - Ensure the folder specified in `GOOGLE_DRIVE_FOLDER_ID` is shared with your service account
    - The service account email must have Editor access to the folder
    - Verify you're using the correct folder ID
+   - **For Google Workspace users**: Consider enabling domain-wide delegation (see below)
 
-5. **Quota exceeded**
+5. **Google Workspace users: Alternative solution with domain-wide delegation**
+   - If you're using Google Workspace (not personal Gmail), you can enable domain-wide delegation
+   - This allows the service account to impersonate a specific user in your organization
+   - See [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md) for complete setup
+   - Requires Super Admin access to Google Workspace Admin Console
+   - Add `GOOGLE_IMPERSONATE_USER_EMAIL` environment variable with a user email from your domain
+   - This can resolve many permission and access issues in Google Workspace environments
+
+6. **Quota exceeded**
    - Check your Google Cloud project quotas
    - Google Drive API has daily limits that may need to be increased
 

@@ -18,6 +18,7 @@ exports.handler = async (event, context) => {
   // Get credentials from environment variables
   const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+  const GOOGLE_IMPERSONATE_USER_EMAIL = process.env.GOOGLE_IMPERSONATE_USER_EMAIL; // Optional: User email to impersonate for domain-wide delegation
   const SHEET_ID = process.env.SHEET_ID;
   const SHEET_NAME = process.env.SHEET_NAME || 'Sites';
   
@@ -35,11 +36,36 @@ exports.handler = async (event, context) => {
 
   try {
     // Initialize Google Auth with Service Account
+    // If GOOGLE_IMPERSONATE_USER_EMAIL is set, use domain-wide delegation to impersonate that user
+    const credentials = {
+      client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
+    };
+    
+    // Add subject for domain-wide delegation if impersonation is configured
+    if (GOOGLE_IMPERSONATE_USER_EMAIL) {
+      // Validate email format to prevent injection attacks
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(GOOGLE_IMPERSONATE_USER_EMAIL)) {
+        console.error('Invalid GOOGLE_IMPERSONATE_USER_EMAIL format');
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ 
+            error: 'Server configuration error',
+            message: 'Invalid impersonation user email format. Please check GOOGLE_IMPERSONATE_USER_EMAIL environment variable.'
+          })
+        };
+      }
+      
+      credentials.subject = GOOGLE_IMPERSONATE_USER_EMAIL;
+      // Log with redacted email for security (show only domain)
+      const emailParts = GOOGLE_IMPERSONATE_USER_EMAIL.split('@');
+      const redactedEmail = emailParts.length === 2 ? `***@${emailParts[1]}` : '***@***';
+      console.log(`Using domain-wide delegation to impersonate: ${redactedEmail}`);
+    }
+    
     const auth = new GoogleAuth({
-      credentials: {
-        client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
-      },
+      credentials: credentials,
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive.file'

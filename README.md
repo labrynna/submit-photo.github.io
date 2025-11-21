@@ -59,6 +59,8 @@ This application is now configured to use Netlify environment variables for secu
 
 **Note:** The same service account is used for both Google Sheets and Google Drive access. See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for Drive-specific configuration.
 
+**For Google Workspace Users:** If you're using Google Workspace (not personal Gmail) and experiencing permission issues, you can optionally enable domain-wide delegation to have the service account impersonate a specific user. See [DOMAIN_WIDE_DELEGATION_SETUP.md](DOMAIN_WIDE_DELEGATION_SETUP.md) for details.
+
 ### 2. DeepSeek API Setup
 
 1. Visit [DeepSeek Platform](https://platform.deepseek.com/)
