@@ -53,12 +53,29 @@ class PhotoSubmissionApp {
      * Supports: ?address=value
      */
     handleUrlParameters() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const address = urlParams.get('address');
-        
-        if (address) {
-            // Pre-fill the address field
-            document.getElementById('address').value = decodeURIComponent(address);
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
+            
+            if (address) {
+                // Pre-fill the address field
+                const addressField = document.getElementById('address');
+                if (addressField) {
+                    // Decode the address value with error handling for malformed URIs
+                    try {
+                        const decodedAddress = decodeURIComponent(address);
+                        // Set the value - browser's input field will automatically escape any HTML
+                        addressField.value = decodedAddress;
+                    } catch (decodeError) {
+                        // If decoding fails, use the raw value
+                        console.warn('Failed to decode address parameter:', decodeError);
+                        addressField.value = address;
+                    }
+                }
+            }
+        } catch (error) {
+            // Silently fail if URL parameter handling fails
+            console.error('Error handling URL parameters:', error);
         }
     }
 
