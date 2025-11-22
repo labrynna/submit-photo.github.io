@@ -19,6 +19,7 @@ class PhotoSubmissionApp {
         this.photoFile = null;
         this.extractedData = null;
         this.initializeEventListeners();
+        this.handleUrlParameters();
     }
 
     initializeEventListeners() {
@@ -45,6 +46,20 @@ class PhotoSubmissionApp {
         // Dismiss error button
         const dismissErrorBtn = document.getElementById('dismiss-error-btn');
         dismissErrorBtn.addEventListener('click', () => this.hideError());
+    }
+
+    /**
+     * Checks URL parameters and pre-fills form fields if present
+     * Supports: ?address=value
+     */
+    handleUrlParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const address = urlParams.get('address');
+        
+        if (address) {
+            // Pre-fill the address field
+            document.getElementById('address').value = decodeURIComponent(address);
+        }
     }
 
     handlePhotoSelection(event) {
