@@ -19,6 +19,7 @@ class PhotoSubmissionApp {
         this.photoFile = null;
         this.extractedData = null;
         this.initializeEventListeners();
+        this.handleUrlParameters();
     }
 
     initializeEventListeners() {
@@ -45,6 +46,40 @@ class PhotoSubmissionApp {
         // Dismiss error button
         const dismissErrorBtn = document.getElementById('dismiss-error-btn');
         dismissErrorBtn.addEventListener('click', () => this.hideError());
+    }
+
+    /**
+     * Checks URL parameters and pre-fills form fields if present
+     * Supports: ?address=value
+     * 
+     * Note: The address parameter should be URL-encoded if it contains special characters.
+     * Malformed URI components will fall back to using the raw parameter value.
+     */
+    handleUrlParameters() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
+            
+            if (address) {
+                // Pre-fill the address field
+                const addressField = document.getElementById('address');
+                if (addressField) {
+                    // Decode the address value with error handling for malformed URIs
+                    try {
+                        const decodedAddress = decodeURIComponent(address);
+                        // Set the value property - this is safe from XSS as it's treated as text content, not HTML
+                        addressField.value = decodedAddress;
+                    } catch (decodeError) {
+                        // If decoding fails, use the raw value
+                        console.warn('Failed to decode address parameter:', decodeError);
+                        addressField.value = address;
+                    }
+                }
+            }
+        } catch (error) {
+            // Silently fail if URL parameter handling fails
+            console.error('Error handling URL parameters:', error);
+        }
     }
 
     handlePhotoSelection(event) {

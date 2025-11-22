@@ -1,0 +1,3 @@
+# Redirect upload.html to index.html (preserving query parameters)
+# Using 200 status for rewriting - the URL stays as upload.html but serves index.html content
+/upload.html  /index.html  200
