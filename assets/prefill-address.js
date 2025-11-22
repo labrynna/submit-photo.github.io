@@ -44,9 +44,10 @@
         hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.name = 'prefill_address';
-        hiddenInput.value = storedAddress;
         dataForm.appendChild(hiddenInput);
       }
+      // Always update the value to ensure it's current
+      hiddenInput.value = storedAddress;
     }
   }
 })();
