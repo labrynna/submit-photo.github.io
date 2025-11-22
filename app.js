@@ -721,7 +721,7 @@ Return only valid JSON, no other text.`;
             'Contact Name': formData.contactName,
             'Contact Number': formData.phone,
             'Email': formData.email,
-            'Picture taken': 'Yes'
+            'Picture taken': 'Found by Photographer'
         };
         
         // Build the row array based on the actual column order in the sheet
