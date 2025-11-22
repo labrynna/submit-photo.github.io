@@ -35,18 +35,18 @@
       addressInput.value = storedAddress;
     }
 
-    // Add hidden input to forms if needed (for upload form)
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
+    // Add hidden input to the data form if it exists
+    const dataForm = document.getElementById('data-form');
+    if (dataForm) {
       // Check if hidden input already exists
-      let hiddenInput = form.querySelector('input[name="prefill_address"]');
+      let hiddenInput = dataForm.querySelector('input[name="prefill_address"]');
       if (!hiddenInput) {
         hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.name = 'prefill_address';
         hiddenInput.value = storedAddress;
-        form.appendChild(hiddenInput);
+        dataForm.appendChild(hiddenInput);
       }
-    });
+    }
   }
 })();
