@@ -51,6 +51,9 @@ class PhotoSubmissionApp {
     /**
      * Checks URL parameters and pre-fills form fields if present
      * Supports: ?address=value
+     * 
+     * Note: The address parameter should be URL-encoded if it contains special characters.
+     * Malformed URI components will fall back to using the raw parameter value.
      */
     handleUrlParameters() {
         try {
@@ -64,7 +67,7 @@ class PhotoSubmissionApp {
                     // Decode the address value with error handling for malformed URIs
                     try {
                         const decodedAddress = decodeURIComponent(address);
-                        // Set the value - browser's input field will automatically escape any HTML
+                        // Set the value property - this is safe from XSS as it's treated as text content, not HTML
                         addressField.value = decodedAddress;
                     } catch (decodeError) {
                         // If decoding fails, use the raw value
