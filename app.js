@@ -458,7 +458,11 @@ Return only valid JSON, no other text.`;
     }
 
     populateForm(data) {
-        document.getElementById('address').value = data.address || '';
+        // Preserve existing address if already filled (e.g., from URL parameter)
+        const addressField = document.getElementById('address');
+        if (!addressField.value) {
+            addressField.value = data.address || '';
+        }
         document.getElementById('company-name').value = data.companyName || '';
         document.getElementById('contact-name').value = data.contactName || '';
         document.getElementById('email').value = data.email || '';
